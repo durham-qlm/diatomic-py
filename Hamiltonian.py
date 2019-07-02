@@ -1,10 +1,39 @@
 import numpy
-import sympy.physics.wigner as wigner
+from sympy.physics.wigner import wigner_3j,wigner_9j
 from sympy.physics.quantum.spin import Rotation
 from scipy.linalg import block_diag,eig,eigvals
+import scipy.constants
 import warnings
 
+h = scipy.constants.h
+muN = scipy.constants.physical_constants['nuclear magneton'][0]
+bohr = scipy.constants.physical_constants['Bohr radius'][0]
+eps0 = scipy.constants.epsilon_0
+c = scipy.constants.c
+
+
 pi = numpy.pi
+
+DebyeSI = 3.33564e-30
+
+RbCs = {    "IRb":1.5,
+            "ICs":3.5,
+            "d0":1.225*DebyeSI,
+            "binding":114268135.25e6*h,
+            "Brot":490.173994326310e6*h,
+            "Drot":213*h,
+            "QRb":-809.29e3*h,
+            "QCs":59.98e3*h,
+            "CRb":98.4*h,
+            "CCs":194.2*h,
+            "C3":192.4*h,
+            "C4":19.0189557e3*h,
+            "MuN":0.0062*muN,
+            "MuRb":1.8295*muN,
+            "MuCs":0.7331*muN,
+            "a0":2020*4*pi*eps0*bohr**3,
+            "a2":1997*4*pi*eps0*bohr**3,
+            "Beta":0}
 
 def Raising_operator(j):
     #produce the raising operator J+
@@ -58,16 +87,26 @@ def Generate_vecs(Nmax,IRb,ICs):
     Ny = Ny[1:,:]
     Nz = Nz[1:,:]
 
-    N_vec = numpy.array([numpy.kron(Nx,numpy.kron(numpy.identity(shapeRb),numpy.identity(shapeCs))),
-                        numpy.kron(Ny,numpy.kron(numpy.identity(shapeRb),numpy.identity(shapeCs))),
-                        numpy.kron(Nz,numpy.kron(numpy.identity(shapeRb),numpy.identity(shapeCs)))])
-    IRb_vec = numpy.array([numpy.kron(numpy.identity(shapeN),numpy.kron(X_operator(IRb),numpy.identity(shapeCs))),
-                        numpy.kron(numpy.identity(shapeN),numpy.kron(Y_operator(IRb),numpy.identity(shapeCs))),
-                        numpy.kron(numpy.identity(shapeN),numpy.kron(Z_operator(IRb),numpy.identity(shapeCs)))])
+    N_vec = numpy.array([numpy.kron(Nx,numpy.kron(numpy.identity(shapeRb),
+                                                    numpy.identity(shapeCs))),
+                        numpy.kron(Ny,numpy.kron(numpy.identity(shapeRb),
+                                                    numpy.identity(shapeCs))),
+                        numpy.kron(Nz,numpy.kron(numpy.identity(shapeRb),
+                                                    numpy.identity(shapeCs)))])
 
-    ICs_vec = numpy.array([numpy.kron(numpy.identity(shapeN),numpy.kron(numpy.identity(shapeRb),X_operator(ICs))),
-                        numpy.kron(numpy.identity(shapeN),numpy.kron(numpy.identity(shapeRb),Y_operator(ICs))),
-                        numpy.kron(numpy.identity(shapeN),numpy.kron(numpy.identity(shapeRb),Z_operator(ICs)))])
+    IRb_vec = numpy.array([numpy.kron(numpy.identity(shapeN),
+                        numpy.kron(X_operator(IRb),numpy.identity(shapeCs))),
+                        numpy.kron(numpy.identity(shapeN),
+                        numpy.kron(Y_operator(IRb),numpy.identity(shapeCs))),
+                        numpy.kron(numpy.identity(shapeN),
+                        numpy.kron(Z_operator(IRb),numpy.identity(shapeCs)))])
+
+    ICs_vec = numpy.array([numpy.kron(numpy.identity(shapeN),
+                        numpy.kron(numpy.identity(shapeRb),X_operator(ICs))),
+                        numpy.kron(numpy.identity(shapeN),
+                        numpy.kron(numpy.identity(shapeRb),Y_operator(ICs))),
+                        numpy.kron(numpy.identity(shapeN),
+                        numpy.kron(numpy.identity(shapeRb),Z_operator(ICs)))])
 
     return N_vec,IRb_vec,ICs_vec
 
@@ -90,19 +129,21 @@ def tensor_nuclear(C3,I1,I2,N):
     ''' The tensor - nuclear spin spin interaction '''
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-        Nmax = int(numpy.amax(N[2]))
-        I1shape = int(numpy.round(numpy.real(2*numpy.amax(I1[2])+1),1))
-        I2shape = int(numpy.round(numpy.real(2*numpy.amax(I2[2])+1),1))
+        Nmax = int(numpy.round(numpy.real(numpy.amax(N[2])),1))
+        I1max = numpy.real(numpy.round(numpy.amax(I1[2]),1))
+        I2max = numpy.real(numpy.round(numpy.amax(I2[2]),1))
 
-    Narray = numpy.array([])
+    I1shape = int(2*I1max+1)
+    I2shape = int(2*I2max+1)
+
+    Narray = numpy.zeros((1,1))
 
     for n in range(0,Nmax+1):
-        shape = 2*n+1
+        shape = int((2*n+1)*(2*I1max+1)*(2*I2max+1))
         nsub = numpy.zeros((shape,shape))+n
         Narray = block_diag(Narray,nsub)
 
-    Narray = Narray[1:,:]
-    Narray = numpy.kron(Narray,numpy.kron(numpy.identity(I1shape),numpy.identity(I2shape)))
+    Narray = Narray[1:,1:]
 
     prefactor = C3/((2*Narray+3)*(2*Narray-1))
     term1 = 3*numpy.dot(vector_dot(I1,N),vector_dot(I2,N))
@@ -110,50 +151,10 @@ def tensor_nuclear(C3,I1,I2,N):
     term3 = -2*vector_dot(I1,I2)*Narray*(Narray+1)
     return prefactor*(term1+term2+term3)
 
-def Jesus_Ph(X):
-    if X<0 :
-        Y = -X
-    else:
-        Y = X
-    if Y%2 == 1:
-        return -1
-    elif Y%2 == 0:
-        return +1
-
-
-def Jesus_Tensor_spin(C3,N,I1,I2):
-    i = 0
-    shape = (2*I1+1)*(2*I2+1)*sum([2*x+1 for x in range(0,N+1)])
-    H = numpy.zeros((shape,shape))
-
-    for n in range(0,Nmax+1):
-        for mn in range(-n,n+1):
-            mn = -mn
-            for mi1 in range(-2*I1,2*I1+1,2):
-                mi1 = -mi1/2
-                for mi2 in range(-2*I2,2*I2+1,2):
-                    mi2 = -mi2/2
-                    for nprime in range(0,Nmax+1)
-                        for mnprime in range(-nprime,nprime+1):
-                            mnprime = -mnprime
-                            for mi1prime in range(-2*I1,2*I1+1,2):
-                                miprime1 = -miprime1/2
-                                for miprime2 in range(-2*I2,2*I2+1,2):
-                                    miprime2 = -miprime2/2
-
-                                    cte1=c3*numpy.sqrt(30.0)*w3j(2*nprime,4,2*nprime,0,0,0)*numpy.sqrt((2*n+1)*(2*nprime+1)*I1*(I1+1)*(2*I1+1)*I2*(I2+1)*(2*I2+1)
-
-                                    cte3 =0
-                                    for it in range(rint(2*abs(I1-I2)),2*I1+2*I2,2):
-                                        for itprime in range(rint(2*abs(I1-I2)),2*I1+2*I2,2):
-                                                cte2=(it+1)*(itprime+1)*w3j(2*I1,2*I2,it,mi1*2,2*mi2,-2*mi1-2*mi2)*w3j(2*I1,2*I2,itprime,2*mi1prime,mi2prime,-mi1prime-mi2prime)*w9j(2*I1,2*I1,1.0,2*I2,2*I2,1.0,it/2.0,itprime/2.0,2.0)*Jesus_Ph(rint(2.0*(2*I1-2*I2)+mi1prime+mi2prime+(it/2.0)-mn))
-                                                for iprime in range(-2,2+1):
-                                                    cte3 = cte3+cte2*Jesus_Ph(iprime)*wigner_3j(2*n,4,2*nprime,-2*mn,2*ip,2*mnprime)*wigner_3j(it,4,itprime,-(2*mi1+2*mi2),-2*ip,2*mi1prime+2*mi2prime)
-                                    H[i,j]=cte1*cte3
 
 def Quadrupole(Q,I1,I2,N):
-    ''' from EQ.2 of https://doi.org/10.1063/1.441113, which quotes the
-     quadrupole interaction for deuterium'''
+    ''' from 10.1103/PhysRev.91.1403, which quotes the
+     quadrupole interaction for KBr'''
     Q1,Q2 = Q
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
@@ -164,45 +165,34 @@ def Quadrupole(Q,I1,I2,N):
     Narray = numpy.array([])
     I1array = numpy.array([])
     I2array = numpy.array([])
+    Narray=numpy.zeros((1,1))
 
-    for n in range(0,Nmax+1):
-        shape = 2*n+1
-        nsub = numpy.zeros((shape,shape))+n
-        Narray = block_diag(Narray,nsub)
-
-    shape =int(2*I1max+1)
-    I1array = numpy.zeros((shape,shape))+I1max
-
-    shape =int(2*I2max+1)
-    I2array = numpy.zeros((shape,shape))+I2max
-
-    Narray = Narray[1:,:]
-
-    Nshape = Narray.shape[0]
-
-    I1shape = I1array.shape[0]
-
-    I2shape = I2array.shape[0]
-
-    Narray = numpy.kron(Narray,numpy.kron(numpy.identity(I1shape),numpy.identity(I2shape)))
-    I1array = numpy.kron(numpy.identity(Nshape),numpy.kron(I1array,numpy.identity(I2shape)))
-    I2array = numpy.kron(numpy.identity(Nshape),numpy.kron(numpy.identity(I1shape),I2array))
+    for n in range(Nmax+1):
+        shape = int((2*I1max+1)*(2*I2max+1)*(2*n+1))
+        subarray = numpy.zeros((shape,shape))+n
+        Narray= scipy.linalg.block_diag(Narray,subarray)
+    Narray = Narray[1:,1:]
 
     epsilon = (numpy.finfo(float).eps)
 
     prefactor1 = numpy.zeros(Narray.shape)
     prefactor2 = numpy.zeros(Narray.shape)
 
-    locs = numpy.where(Narray!=0)
-    prefactor1[locs] = Q1/(4*I1max*(2*I1max-1)*(2*Narray[locs]-1)*(2*Narray[locs]+3))
-    term1_1= 3*vector_dot(I1,N)**2
-    term2_1 = 1.5*vector_dot(I1,N)
-    Quad1 = -prefactor1*(term1_1 +term2_1-(I1max*(I1max+1)*Narray*(Narray+1)))
+    prefactor1 = -Q1/(2*I1max*(2*I1max-1)*(2*Narray-1)\
+                        *(2*Narray+3))
 
-    prefactor2[locs] = Q2/(4*I2max*(2*I2max-1)*(2*Narray[locs]-1)*(2*Narray[locs]+3))
-    term1_2= 3*vector_dot(I2,N)**2
+    term1_1= 3*(numpy.dot(vector_dot(I1,N),vector_dot(I1,N)))
+    term2_1 = 1.5*vector_dot(I1,N)
+    term3_1 = -1*numpy.dot(vector_dot(I1,I1),vector_dot(N,N))
+    Quad1 = prefactor1*(term1_1 +term2_1+term3_1)
+
+    prefactor2 = -Q2/(2*I2max*(2*I2max-1)*(2*Narray-1)*\
+                        (2*Narray+3))
+
+    term1_2= 3*(numpy.dot(vector_dot(I2,N),vector_dot(I2,N)))
     term2_2 = 1.5*vector_dot(I2,N)
-    Quad2 = -prefactor2*(term1_2 +term2_2-(I2max*(I2max+1)*Narray*(Narray+1)))
+    term3_2 = -1*numpy.dot(vector_dot(I2,I2),vector_dot(N,N))
+    Quad2 = prefactor2*(term1_2 +term2_2+term3_2)
 
     return Quad1+Quad2
 
@@ -221,7 +211,7 @@ def DC(Nmax,d0,I1,I2):
         for M1 in range(N1,-(N1+1),-1):
             for N2 in range(0,Nmax+1):
                 for M2 in range(N2,-(N2+1),-1):
-                    HDC[i,j]=-d0*numpy.sqrt((2*N1+1)*(2*N2+1))*(-1)**(M1)*wigner.wigner_3j(N1,1,N2,-M1,0,M2)*wigner.wigner_3j(N1,1,N2,0,0,0)
+                    HDC[i,j]=-d0*numpy.sqrt((2*N1+1)*(2*N2+1))*(-1)**(M1)*wigner_3j(N1,1,N2,-M1,0,M2)*wigner_3j(N1,1,N2,0,0,0)
                     j+=1
             j=0
             i+=1
@@ -245,7 +235,8 @@ def AC_iso(Nmax,a0,I1,I2):
             j=0
             i+=1
     HAC[numpy.isnan(HAC)] =0
-    return (numpy.kron(HAC,numpy.kron(numpy.identity(I1shape),numpy.identity(I2shape))))
+    return (numpy.kron(HAC,numpy.kron(numpy.identity(I1shape),
+                                                    numpy.identity(I2shape))))
 
 def AC_aniso(Nmax,a2,Beta,I1,I2):
     ''' Anisotropic part of the AC Stark shift'''
@@ -260,12 +251,16 @@ def AC_aniso(Nmax,a2,Beta,I1,I2):
             for N2 in range(0,Nmax+1):
                 for M2 in range(N2,-(N2+1),-1):
                     M = M2-M1
-                    HAC[i,j]= -a2*(Rotation.d(2,M,0,Beta).doit()*(-1)**M2*numpy.sqrt((2*N1+1)*(2*N2+1))*wigner.wigner_3j(N2,2,N1,0,0,0)*wigner.wigner_3j(N2,2,N1,-M2,M,M1))
+                    HAC[i,j]= -a2*(Rotation.d(2,M,0,Beta).doit()*(-1)**M2*\
+                                numpy.sqrt((2*N1+1)*(2*N2+1))*\
+                                wigner_3j(N2,2,N1,0,0,0)*\
+                                wigner_3j(N2,2,N1,-M2,M,M1))
                     j+=1
             j=0
             i+=1
     HAC[numpy.isnan(HAC)] =0
-    return (numpy.kron(HAC,numpy.kron(numpy.identity(I1shape),numpy.identity(I2shape))))
+    return (numpy.kron(HAC,numpy.kron(numpy.identity(I1shape),
+            numpy.identity(I2shape))))
 
 def Hyperfine_Ham(Nmax,I1_mag,I2_mag,Consts):
     ''' The field-free Hyperfine hamiltonian '''
@@ -279,22 +274,37 @@ def Hyperfine_Ham(Nmax,I1_mag,I2_mag,Consts):
 def Zeeman_Ham(Nmax,I1_mag,I2_mag,Consts):
     ''' assembles the Zeeman term and generates operator vectors'''
     N,I1,I2 = Generate_vecs(Nmax,I1_mag,I2_mag)
-    H = Zeeman(Consts['MuRb'],I1)+Zeeman(Consts['MuCs'],I2)+Zeeman(Consts['MuN'],N)
+    H = Zeeman(Consts['MuRb'],I1)+Zeeman(Consts['MuCs'],I2)+\
+                Zeeman(Consts['MuN'],N)
     return H
 
-def Build_Hamiltonians(Nmax,I1,I2,Constants):
+def Build_Hamiltonians(Nmax,I1,I2,Constants,zeeman=False,DC=False,AC=False):
     ''' This function builds the hamiltonian matrices for evalutation so that
     the user doesn't have to rebuild them every time and we can benefit from
     numpy's ability to do distributed multiplcation.'''
     H0 = Hyperfine_Ham(Nmax,I1,I2,Constants)
-    Hz = Zeeman_Ham(Nmax,I1,I2,Constants)
-    HDC = DC(Nmax,Constants['d0'],I1,I2)
-    HAC = AC_iso(Nmax,Constants['a0'],I1,I2)+AC_aniso(Nmax,Constants['a2'],Constants['Beta'],I1,I2)
+    if zeeman:
+        Hz = Zeeman_Ham(Nmax,I1,I2,Constants)
+    else:
+        Hz =0.
+    if DC:
+        HDC = DC(Nmax,Constants['d0'],I1,I2)
+    else:
+        HDC =0.
+    if AC:
+        HAC = AC_iso(Nmax,Constants['a0'],I1,I2)+\
+        AC_aniso(Nmax,Constants['a2'],Constants['Beta'],I1,I2)
+    else:
+        HAC =0.
     return H0,Hz,HDC,HAC
 
 def Vary_magnetic(Hams,fields0,Bz,return_states = False):
     H0,Hz,HDC,HAC = Hams
     E,B,I = fields0
+
+    if type(Hz) != numpy.ndarray:
+        warnings.warn("Hamiltonian is zero: nothing will change")
+
     EigenValues = numpy.zeros((H0.shape[0],len(Bz)))
     if return_states:
         States = numpy.zeros((H0.shape[0],H0.shape[0],len(Bz)))
@@ -316,9 +326,13 @@ def Vary_magnetic(Hams,fields0,Bz,return_states = False):
         return EigenValues
 
 def Vary_ElectricDC(Hams,fields0,Ez,return_states = False):
-    H0,Hz,HDC,HAC = Hams
     E,B,I = fields0
+    H0,Hz,HDC,HAC = Hams
     EigenValues = numpy.zeros((H0.shape[0],len(Ez)))
+
+    if type(HDC) != numpy.ndarray:
+        warnings.warn("Hamiltonian is zero: nothing will change")
+
     if return_states:
         States = numpy.zeros((H0.shape[0],H0.shape[0],len(Ez)))
     for i,e in enumerate(Ez):
@@ -341,6 +355,9 @@ def Vary_ElectricDC(Hams,fields0,Ez,return_states = False):
 def Vary_Intensity(Hams,fields0,I_app,return_states = False):
     H0,Hz,HDC,HAC = Hams
     E,B,I = fields0
+    if type(HAC) != numpy.ndarray:
+        warnings.warn("Hamiltonian is zero: nothing will change")
+
     EigenValues = numpy.zeros((H0.shape[0],len(I_app)))
     if return_states:
         States = numpy.zeros((H0.shape[0],H0.shape[0],len(I_app)))
@@ -365,6 +382,9 @@ def Vary_Beta(Hams,fields0,Angles,Molecule_pars,return_states = False):
     Nmax,I1,I2,a2 = Molecule_pars
     H0,Hz,HDC,HAC = Hams
     E,B,I = fields0
+    if I == 0:
+        warnings.warn("Intensity is zero: nothing will change")
+
     EigenValues = numpy.zeros((H0.shape[0],len(Bz)))
     if return_states:
         States = numpy.zeros((H0.shape[0],H0.shape[0],len(Bz)))
@@ -402,60 +422,27 @@ if __name__=="__main__":
     eps0 = scipy.constants.epsilon_0
     c = scipy.constants.c
 
-    DebyeSI = 3.33564e-30
+    DebyeSI = 3.33564e-30 #C m/Debye
 
-    Constants = {"IRb":1.5,
-                "ICs":3.5,
-                "d0":1.225*DebyeSI,
-                "D0":114268135.25e6*h,
-                "Brot":490.173994e6*h,
-                "Drot":213*h,
-                "QRb":-809.29e3*h,
-                "QCs":59.98e3*h,
-                "CRb":29.4*h,
-                "CCs":196.8*h,
-                "C3":192.4*h,
-                "C4":19.019e3*h,
-                "MuN":0.0062*muN,
-                "MuRb":1.8295*muN,
-                "MuCs":0.7331*muN,
-                "a0":2020*4*pi*eps0*bohr**3,
-                "a2":1997*4*pi*eps0*bohr**3,
-                "Beta":0}
-
-    Nmaximum = 5
-    IRb = Constants['IRb']
-    ICs =  Constants['ICs']
+    Nmaximum = 1
+    IRb =RbCs['IRb']
+    ICs =  RbCs['ICs']
 
     Nshape = numpy.sum([2*x+1 for x in range(0,Nmaximum+1)])
 
     HFShape = int(Nshape*(2*IRb+1)*(2*ICs+1))
 
     Steps = 150
+    bvary = numpy.linspace(0,200,Steps)
     start = time.time()
-    Energies = numpy.empty((HFShape,Steps))
+    #Energies = numpy.empty((HFShape,Steps))
     # build the hamiltonian without any fields
-    H0 = Hyperfine_Ham(Nmaximum,IRb,ICs,Constants)
-    Hz = Zeeman_Ham(Nmaximum,IRb,ICs,Constants)
-    HDC = DC(Nmaximum,Constants['d0'],IRb,ICs)
-    HAC = AC_iso(Nmaximum,Constants['a0'],IRb,ICs)+AC_aniso(Nmaximum,Constants['a2'],Constants['Beta'],IRb,ICs)
+    N,I1,I2 = Generate_vecs(Nmaximum,IRb,ICs)
+    #H0 = Hyperfine_Ham(Nmaximum,IRb,ICs,Constants)
+    #Hz = Zeeman_Ham(Nmaximum,IRb,ICs,Constants)
+    #HDC = DC(Nmaximum,Constants['d0'],IRb,ICs)
+    #HAC = AC_iso(Nmaximum,Constants['a0'],IRb,ICs)+\
+    #AC_aniso(Nmaximum,Constants['a2'],Constants['Beta'],IRb,ICs)
 
-
-    now = time.time()
-    print("building took:{:.4f} seconds".format(now-start))
-    then = now
-    for i,Bz in enumerate(numpy.linspace(0,200e-4,Steps)):
-        print(i)
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-            #egienvalues are are complex data type, but if the code has worked,
-            #then they should only have a real component. this stops python
-            #warning us about discarding the real part
-            H_tot = H0+Hz*Bz+HDC*E+HAC*I/(2*eps0*c)
-            energy = numpy.sort(numpy.linalg.eigvals(H_tot))
-            Energies[:,i] = energy
-    now = time.time()
-    print("eval. took:{:.4f} seconds".format(now-then))
-    for i in range(0,1152):
-        pyplot.plot(numpy.linspace(0,200,Steps),numpy.real(1e-6*Energies[i,:]/h),color='k')
-    pyplot.show()
+    Hamiltonian = Build_Hamiltonians(Nmaximum,IRb,ICs,RbCs,zeeman=True)
+    energy = Vary_magnetic(Hamiltonian,(B,I,E),bvary)

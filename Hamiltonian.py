@@ -72,7 +72,7 @@ K41Cs = {   "I1":1.5,
             "C4":628*h,
             "MuN":0.0*muN,
             "Mu1":0.143*(1-1340.7e-6)*muN,
-            "Mu1":0.738*(1-6337.1e-6)*muN,
+            "Mu2":0.738*(1-6337.1e-6)*muN,
             "a0":7.783e6*h, #h*Hz/(W/cm^2)
             "a2":0,
             "Beta":0}
@@ -805,7 +805,7 @@ if __name__=="__main__":
     Nmaximum = 3
 
     Steps = 100
-    
+
     bvary = numpy.linspace(0,500e-4,Steps)
     start = time.time()
     Hamiltonian = Build_Hamiltonians(Nmaximum,RbCs,zeeman=True)

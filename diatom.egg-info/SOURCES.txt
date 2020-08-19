@@ -1,0 +1,9 @@
+README.md
+setup.py
+diatom/Hamiltonian.py
+diatom/__init__.py
+diatom.egg-info/PKG-INFO
+diatom.egg-info/SOURCES.txt
+diatom.egg-info/dependency_links.txt
+diatom.egg-info/requires.txt
+diatom.egg-info/top_level.txt

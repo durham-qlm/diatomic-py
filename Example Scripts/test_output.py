@@ -1,4 +1,4 @@
-import Hamiltonian
+from diatom import Hamiltonian
 import matplotlib.pyplot as pyplot
 import scipy.constants
 import numpy

@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: diatom
+Version: 1.0.1
+Summary: A package for calculating molecular hyperfine structure.
+Home-page: https://github.com/JakeBlackmore/Diatomic-Py
+Author: Jake Blackmore
+Author-email: j.a.blackmore@durham.ac.uk
+License: Boost Software License - Version 1.0
+Description: # Diatomic-Py
+        Python module to calculate the hyperfine energy levels of singlet sigma diatomic molecules. Included are examples from the bialkali series : RbCs, KCs and KRb
+        
+        The hyperfine structure can be calculated in static electric and magnetic fields and, when provided the polarisability, oscillating electric fields.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown

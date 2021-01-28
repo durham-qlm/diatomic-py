@@ -1,9 +1,16 @@
 import numpy
 from sympy.physics.wigner import wigner_3j,wigner_9j
-from sympy.physics.quantum.spin import Rotation
 from scipy.linalg import block_diag,eig,eigvals
 import scipy.constants
+from scipy.special import sph_harm
 import warnings
+
+'''
+This module contains the main code to calculate the hyperfine structure of
+singlet -sigma molecules. In usual circumstances most of the functions within
+are not user-oriented.
+'''
+
 
 ###############################################################################
 # Start by definining a bunch of constants that are needed for the code       #
@@ -45,7 +52,7 @@ RbCs = {    "I1":1.5,
             "d0":1.225*DebyeSI,
             "binding":114268135.25e6*h,
             "Brot":490.173994326310e6*h,
-            "Drot":213*h,
+            "Drot":207.3*h,
             "Q1":-809.29e3*h,
             "Q2":59.98e3*h,
             "C1":98.4*h,
@@ -213,9 +220,184 @@ def Generate_vecs(Nmax,I1,I2):
 
     return N_vec,I1_vec,I2_vec
 
+def Wigner_D(l,m,alpha,beta,gamma):
+    ''' The Wigner D matrix with labels l and m. Alpha,beta,gamma
+     are the x-z-x euler angles'''
+    prefactor = numpy.sqrt((4*numpy.pi)/(2*l+1))
+    function = numpy.conj(sph_harm(m,l,alpha,beta))
+    return prefactor*function
+
+def T2_C(Nmax,I1,I2):
+    ''' The irreducible spherical tensors for the spherical harmonics in the
+    rotational basis. input arguments are:
+    Nmax - int. Maximum rotational state to include
+    I1,I2 - float. The nuclear spins of nucleus 1 and 2 '''
+    shape = sum([2*x+1 for x in range(0,Nmax+1)])
+    shape = (shape,shape)
+    Identity1 = numpy.identity(int(2*I1+1))
+    Identity2 = numpy.identity(int(2*I2+1))
+
+    Identity = numpy.kron(Identity1,Identity2)
+
+    T = [numpy.zeros(shape),numpy.zeros(shape),
+        numpy.zeros(shape),
+        numpy.zeros(shape),numpy.zeros(shape)]
+
+    x=-1
+    for N in range(0,Nmax+1):
+        for MN in range(N,-(N+1),-1):
+            x+=1
+            y=-1
+            for Np in range(0,Nmax+1):
+                for MNp in range(Np,-(Np+1),-1):
+                    y+=1
+                    for i,q in enumerate(range(-2,2+1)):
+                        T[i][x,y]=((-1)**MN)*numpy.sqrt((2*N+1)*(2*Np+1))*\
+                            wigner_3j(N,2,Np,0,0,0)*wigner_3j(N,2,Np,-MN,q,MNp)
+
+    for i,q in enumerate(range(-2,2+1)):
+        T[i] = numpy.kron(T[i],Identity)
+    return T
+
+def MakeT2(I1,I2):
+    ''' Construct the spherical tensor T2 from
+    two cartesian vectors of operators.
+
+    Inputs are I1,I2 - the output of makevecs
+    '''
+    T2m2 = 0.5*(numpy.dot(I1[0],I2[0])-1.0j*numpy.dot(I1[0],I2[1])-1.0j*numpy.dot(I1[1],I2[0])-numpy.dot(I1[1],I2[1]))
+    T2p2 = 0.5*(numpy.dot(I1[0],I2[0])+1.0j*numpy.dot(I1[0],I2[1])+1.0j*numpy.dot(I1[1],I2[0])-numpy.dot(I1[1],I2[1]))
+
+    T2m1 = 0.5*(numpy.dot(I1[0],I2[2])-1.0j*numpy.dot(I1[1],I2[2])+numpy.dot(I1[2],I2[0])-1.0j*numpy.dot(I1[2],I2[1]))
+    T2p1 = -0.5*(numpy.dot(I1[0],I2[2])+1.0j*numpy.dot(I1[1],I2[2])+numpy.dot(I1[2],I2[0])+1.0j*numpy.dot(I1[2],I2[1]))
+
+    T20 = -numpy.sqrt(1/6)*(numpy.dot(I1[0],I2[0])+numpy.dot(I1[1],I2[1]))+numpy.sqrt(2/3)*numpy.dot(I1[2],I2[2])
+
+    T = [T2m2,T2m1,T20,T2p1,T2p2]
+
+    return T
+
+def TensorDot(T1,T2):
+    ''' A function to calculate the scalar product of two spherical tensors
+    T1 and T2 are lists or numpy arrays that represent the spherical tensors
+    lists are indexed from lowest m to highests'''
+    x = numpy.zeros(T1[0].shape,dtype=numpy.complex128)
+    for i,q in enumerate(range(-2,2+1)):
+        x += ((-1)**q)*numpy.dot(T1[i],T2[-(i+1)])
+    return x
+
+
 # From here the functions will calculate individual terms in the Hamiltonian,
 # I have split them up for two reasons 1) readability and 2) so that its obvious
 # what is doing what.
+
+
+def ElectricGradient(Nmax,I1,I2):
+    '''
+    spherical tensor for the electric field gradient at nucleus i. Depends
+    on the rotational states not the nuclear spin states.
+    input arguments are:
+    Nmax - int. Maximum rotational state to include
+    I1,I2 - float. The nuclear spins of nucleus 1 and 2
+    '''
+    shape = sum([2*x+1 for x in range(0,Nmax+1)])
+    shape = (shape,shape)
+    Identity1 = numpy.identity(int(2*I1+1))
+
+    Identity2 = numpy.identity(int(2*I2+1))
+
+    Identity = numpy.kron(Identity1,Identity2)
+
+    T = [numpy.zeros(shape),numpy.zeros(shape),
+        numpy.zeros(shape),
+        numpy.zeros(shape),numpy.zeros(shape)]
+
+    x=-1
+    for N in range(0,Nmax+1):
+        for MN in range(N,-(N+1),-1):
+            x+=1
+            y=-1
+            for Np in range(0,Nmax+1):
+                for MNp in range(Np,-(Np+1),-1):
+                    y+=1
+                    for i,q in enumerate(range(-2,2+1)):
+                        T[i][x,y]=(-1)**(N-MN)*wigner_3j(N,2,Np,-MN,q,MNp)*\
+                        (-1)**N*numpy.sqrt((2*N+1)*(2*Np+1))*\
+                        wigner_3j(N,2,Np,0,0,0)
+
+    for i,q in enumerate(range(-2,2+1)):
+        T[i] = numpy.kron(T[i],Identity)
+    return T
+
+def QuadMoment(Nmax,I1,I2):
+    '''
+    spherical tensor for the nuclear quadrupole moment of both nuclei. Depends
+    on the nuclear spin states not the rotational states.
+    input arguments are:
+    Nmax - int. Maximum rotational state to include
+    I1,I2 - float. The nuclear spins of nucleus 1 and 2
+    '''
+    shape1 = int(2*I1+1)
+    shape1 = (shape1,shape1)
+
+    T1 = [numpy.zeros(shape1),numpy.zeros(shape1),
+        numpy.zeros(shape1),
+        numpy.zeros(shape1),numpy.zeros(shape1)]
+
+    shape2 = int(2*I2+1)
+    shape2 = (shape2,shape2)
+
+    T2 = [numpy.zeros(shape2),numpy.zeros(shape2),
+        numpy.zeros(shape2),
+        numpy.zeros(shape2),numpy.zeros(shape2)]
+
+    ShapeN = int(sum([2*x+1 for x in range(0,Nmax+1)]))
+
+    IdentityN = numpy.identity(ShapeN)
+    Identity1 = numpy.identity(int(2*I1+1))
+    Identity2 = numpy.identity(int(2*I2+1))
+
+    x=-1
+    for M1 in numpy.arange(I1,-(I1+1),-1):
+        x+=1
+        y=-1
+        for M1p in numpy.arange(I1,-(I1+1),-1):
+            y+=1
+            for i,q in enumerate(range(-2,2+1)):
+                T1[i][x,y]=(-1)**(I1-M1)*wigner_3j(I1,2,I1,-M1,q,M1p)/\
+                wigner_3j(I1,2,I1,-I1,0,I1)
+    x=-1
+    for M2 in numpy.arange(I2,-(I2+1),-1):
+        x+=1
+        y=-1
+        for M2p in numpy.arange(I2,-(I2+1),-1):
+            y+=1
+            for i,q in enumerate(range(-2,2+1)):
+                T2[i][x,y]=(-1)**(I2-M2)*wigner_3j(I2,2,I2,-M2,q,M2p)/\
+                wigner_3j(I2,2,I2,-I2,0,I2)
+
+    for i,q in enumerate(range(-2,2+1)):
+        T1[i] = numpy.kron(IdentityN,numpy.kron(T1[i],Identity2))
+        T2[i] = numpy.kron(IdentityN,numpy.kron(Identity1,T2[i]))
+    return T1,T2
+
+def Quadrupole(Q,I1,I2,Nmax):
+    ''' Calculates the Quadrupole terms for the hyperfine Hamiltonian using
+    spherical tensor algebra.
+    input arguments are:
+    Q - two-tuple of nuclear electric quadrupole moments in Joules
+    Nmax - int. Maximum rotational state to include
+    I1,I2 - float. The nuclear spins of nucleus 1 and 2
+    '''
+    Q1,Q2 = Q
+
+    TdE = ElectricGradient(Nmax,I1,I2)
+    Tq1,Tq2 = QuadMoment(Nmax,I1,I2)
+
+    Hq = Q1*TensorDot(Tq1,TdE)+Q2*TensorDot(Tq2,TdE)
+
+    return Hq/4
+
 
 def Rotational(N,Brot,Drot):
     '''
@@ -255,117 +437,27 @@ def scalar_nuclear(Ci,J1,J2):
     '''
     return Ci*vector_dot(J1,J2)
 
-def tensor_nuclear(C3,I1,I2,N):
+def tensor_nuclear(C3,I1,I2,Nmax):
     '''
-        The tensor - nuclear spin spin interaction
-        input arguments:
-        C3: Tensor spin-spin coupling coefficient (float)
-        I1,I2,N: Angular momentum Vectors (numpy.ndarry)
-        returns:
-        Quad: (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x
-           (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.
+        This function is to calculate the tensor spin-spin interaction.
+        This version uses spherical tensors to calculate the correct off-diagonal
+        behaviour.
+
+        Inputs: C3 - spin-spin coupling constant
+        I1,I2 - Cartesian Angular momentum operator Vectors
+        Nmax - maximum rotational state to include (int)
     '''
-    with warnings.catch_warnings():
-        # this is a statement to make the code nicer to use, python wants to
-        # warn the user whenever the data type is changed from Complex. But we
-        # know that it will always be real so it doesn't matter.
-        warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-        #find max values for angular momentum from their projections onto z
-        Nmax = int(numpy.round(numpy.real(numpy.amax(N[2])),1))
-        I1max = numpy.real(numpy.round(numpy.amax(I1[2]),1))
-        I2max = numpy.real(numpy.round(numpy.amax(I2[2]),1))
+    #find the value of I1 and I2 with less input arguments
+    I1_val = numpy.round(numpy.amax(I1[2]),1).real
+    I2_val = numpy.round(numpy.amax(I2[2]),1).real
 
-    I1shape = int(2*I1max+1)
-    I2shape = int(2*I2max+1)
+    #steps for maths, creates the spherical tensors
+    T1 = T2_C(Nmax,I1_val,I2_val)
+    T2 = MakeT2(I1,I2)
+    #return final Hamiltonian
+    tensorss = numpy.sqrt(6)*C3*TensorDot(T1,T2)
 
-    # The tensor nuclear spin-spin interaction depends on the rotational level
-    # not its projection, so we have to create a new matrix that contains the
-    # values of N. Thankfully the terms are block-diagonal in N so we don't have
-    # to worry what the term <N,MN|I1 dot T dot I|N',MN'> looks like
-    Narray = numpy.zeros((1,1))
-
-    for n in range(0,Nmax+1):
-        #this loop iterates over all the values for N (indexed as n) allowed and
-        # builds an nxn matrix of only one value.
-
-        shape = int((2*n+1)*(2*I1max+1)*(2*I2max+1))
-        nsub = numpy.zeros((shape,shape))+n
-        Narray = block_diag(Narray,nsub)
-
-    #first element is fixed to be zero - get rid of it
-    Narray = Narray[1:,1:]
-
-    #Now calculate the terms as shown earlier
-    prefactor = C3/((2*Narray+3)*(2*Narray-1))
-    term1 = 3*numpy.dot(vector_dot(I1,N),vector_dot(I2,N))
-    term2 = 3*numpy.dot(vector_dot(I2,N),vector_dot(I1,N))
-    term3 = -2*vector_dot(I1,I2)*Narray*(Narray+1)
-    return prefactor*(term1+term2+term3)
-
-
-def Quadrupole(Q,I1,I2,N):
-    '''
-        from 10.1103/PhysRev.91.1403, which quotes the quadrupole interaction
-         for KBr
-         input arguments:
-
-         Q:Tuple or list of the nuclear quadrupole moments as (Q1,Q2)  (tuple)
-         I1,I2,N: Nuclear spin of nucleus 1,2 and rotational angular momentum
-                  vectory (numpy.ndarray)
-        returns:
-        Quad: (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x
-           (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.
-
-    '''
-    Q1,Q2 = Q
-    with warnings.catch_warnings():
-        # this is a statement to make the code nicer to use, python wants to
-        # warn the user whenever the data type is changed from Complex. But we
-        # know that it will always be real so it doesn't matter.
-        warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-        #find max values for angular momentum from their projections onto z
-        Nmax = int(numpy.round(numpy.real(numpy.amax(N[2])),1))
-        I1max = numpy.round(numpy.real(numpy.amax(I1[2])),1)
-        I2max = numpy.round(numpy.real(numpy.amax(I2[2])),1)
-
-    Narray = numpy.array([])
-    Narray=numpy.zeros((1,1))
-
-    for n in range(Nmax+1):
-        # this loop iterates over all the values for N (indexed as n) allowed &
-        # builds an (2*I1+1)*(2*I2+1)*(2*n+1)x(2*I1+1)*(2*I2+1)*(2*n+1) matrix
-        # of only one value.
-        shape = int((2*I1max+1)*(2*I2max+1)*(2*n+1))
-        subarray = numpy.zeros((shape,shape))+n
-        Narray= scipy.linalg.block_diag(Narray,subarray)
-    Narray = Narray[1:,1:]
-    # there is the possibility for division by zero here, so define a machine
-    # epsilon to avoid NaN errors. Epsilon is insignificantly small,
-    # particularly on modern 64-bit machines.
-    epsilon = (numpy.finfo(float).eps)
-
-    prefactor1 = numpy.zeros(Narray.shape)
-    prefactor2 = numpy.zeros(Narray.shape)
-
-    # Calculate the terms as earlier. This is presented in Sigma notation in the
-    # text but is actually just two terms.
-    prefactor1 = -Q1/(2*I1max*(2*I1max-1)*(2*Narray-1)\
-                        *(2*Narray+3))
-
-    term1_1= 3*(numpy.dot(vector_dot(I1,N),vector_dot(I1,N)))
-    term2_1 = 1.5*vector_dot(I1,N)
-    term3_1 = -1*numpy.dot(vector_dot(I1,I1),vector_dot(N,N))
-    Quad1 = prefactor1*(term1_1 +term2_1+term3_1)
-
-    prefactor2 = -Q2/(2*I2max*(2*I2max-1)*(2*Narray-1)*\
-                        (2*Narray+3))
-
-    term1_2= 3*(numpy.dot(vector_dot(I2,N),vector_dot(I2,N)))
-    term2_2 = 1.5*vector_dot(I2,N)
-    term3_2 = -1*numpy.dot(vector_dot(I2,I2),vector_dot(N,N))
-    Quad2 = prefactor2*(term1_2 +term2_2+term3_2)
-
-    return Quad1+Quad2
+    return tensorss
 
 def DC(Nmax,d0,I1,I2):
     '''
@@ -487,7 +579,7 @@ def AC_aniso(Nmax,a2,Beta,I1,I2):
             for N2 in range(0,Nmax+1):
                 for M2 in range(N2,-(N2+1),-1):
                     M = M2-M1
-                    HAC[i,j]= -a2*(Rotation.d(2,M,0,Beta).doit()*(-1)**M2*\
+                    HAC[i,j]= -a2*(Wigner_D(2,M,0,Beta,0)*(-1)**M2*\
                                 numpy.sqrt((2*N1+1)*(2*N2+1))*\
                                 wigner_3j(N2,2,N1,0,0,0)*\
                                 wigner_3j(N2,2,N1,-M2,M,M1))
@@ -522,8 +614,8 @@ def Hyperfine_Ham(Nmax,I1_mag,I2_mag,Consts):
     N,I1,I2 = Generate_vecs(Nmax,I1_mag,I2_mag)
     H = Rotational(N,Consts['Brot'],Consts['Drot'])+\
     scalar_nuclear(Consts['C1'],N,I1)+scalar_nuclear(Consts['C2'],N,I2)+\
-    scalar_nuclear(Consts['C4'],I1,I2)+tensor_nuclear(Consts['C3'],I1,I2,N)+\
-    Quadrupole((Consts['Q1'],Consts['Q2']),I1,I2,N)
+    scalar_nuclear(Consts['C4'],I1,I2)+tensor_nuclear(Consts['C3'],I1,I2,Nmax)+\
+    Quadrupole((Consts['Q1'],Consts['Q2']),I1_mag,I2_mag,Nmax)
     return H
 
 def Zeeman_Ham(Nmax,I1_mag,I2_mag,Consts):
@@ -543,7 +635,6 @@ def Zeeman_Ham(Nmax,I1_mag,I2_mag,Consts):
     H = Zeeman(Consts['Mu1'],I1)+Zeeman(Consts['Mu2'],I2)+\
                 Zeeman(Consts['MuN'],N)
     return H
-
 # This is the main build function and one that the user will actually have to
 # use.
 
@@ -586,199 +677,6 @@ def Build_Hamiltonians(Nmax,Constants,zeeman=False,EDC=False,AC=False):
     else:
         HAC =0.
     return H0,Hz,HDC,HAC
-
-#These are the functions that the user will use to generate any interesting maps
-#obviously these can be added to by writing custom scripts but these should
-# cover most needs
-
-def Vary_magnetic(Hams,fields0,Bz,return_states = False):
-
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
-
-        input arguments:
-        Hams: list or tuple of hamiltonians. Should all be the same size
-        fields0: initial field conditions, allows for zeeman + Stark effects
-        Bz: magnetic field to be iterated over
-        return_states: Switch to return EigenStates as well as Eigenenergies
-
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
-        states:array of Eigenstates, sorted as in energy.
-    '''
-
-    H0,Hz,HDC,HAC = Hams
-    E,B,I = fields0
-
-    #warn the user if they've done something silly, so they don't waste time
-    if type(Hz) != numpy.ndarray:
-        warnings.warn("Hamiltonian is zero: nothing will change!")
-    else:
-        EigenValues = numpy.zeros((H0.shape[0],len(Bz)))
-        if return_states:
-            States = numpy.zeros((H0.shape[0],H0.shape[0],len(Bz)))
-        for i,b in enumerate(Bz):
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-                H = H0+E*HDC+I*HAC+b*Hz
-                if return_states:
-                    Eigen = eig(H)
-                    order = numpy.argsort(Eigen[0])
-                    EigenValues[:,i]=Eigen[0][order]
-                    States[:,:,i] = Eigen[1][:,order]
-                else:
-                    Eigen = eigvals(H)
-                    EigenValues[:,i]=numpy.sort(Eigen)
-        if return_states:
-            return EigenValues,States
-        else:
-            return EigenValues
-
-def Vary_ElectricDC(Hams,fields0,Ez,return_states = False):
-
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
-
-        input arguments:
-        Hams: list or tuple of hamiltonians. Should all be the same size
-        fields0: initial field conditions, allows for zeeman + Stark effects
-        Ez: Electric field to be iterated over
-        return_states: Switch to return EigenStates as well as Eigenenergies
-
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
-        states:array of Eigenstates, sorted as in energy.
-    '''
-    E,B,I = fields0
-    H0,Hz,HDC,HAC = Hams
-    EigenValues = numpy.zeros((H0.shape[0],len(Ez)))
-
-    #warn the user if they've done something silly, so they don't waste time
-
-    if type(HDC) != numpy.ndarray:
-        warnings.warn("Hamiltonian is zero: nothing will change!")
-
-    else:
-        if return_states:
-            States = numpy.zeros((H0.shape[0],H0.shape[0],len(Ez)))
-        for i,e in enumerate(Ez):
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-                H = H0+e*HDC+I*HAC+B*Hz
-                if return_states:
-                    Eigen = eig(H)
-                    order = numpy.argsort(Eigen[0])
-                    EigenValues[:,i]=Eigen[0][order]
-                    States[:,:,i] = Eigen[1][:,order]
-                else:
-                    Eigen = eigvals(H)
-                    EigenValues[:,i]=numpy.sort(Eigen)
-        if return_states:
-            return EigenValues,States
-        else:
-            return EigenValues
-
-def Vary_Intensity(Hams,fields0,I_app,return_states = False):
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
-
-        input arguments:
-        Hams: list or tuple of hamiltonians. Should all be the same size
-        fields0: initial field conditions, allows for zeeman + Stark effects
-        I_app: Laser
-        return_states: Switch to return EigenStates as well as Eigenenergies
-
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
-        states:array of Eigenstates, sorted as in energy.
-    '''
-
-    H0,Hz,HDC,HAC = Hams
-    E,B,I = fields0
-
-    #warn the user if they've done something silly, so they don't waste time
-
-    if type(HAC) != numpy.ndarray:
-        warnings.warn("Hamiltonian is zero: nothing will change")
-    else:
-        EigenValues = numpy.zeros((H0.shape[0],len(I_app)))
-        if return_states:
-            States = numpy.zeros((H0.shape[0],H0.shape[0],len(I_app)))
-        else:
-            for i,Int in enumerate(I_app):
-                with warnings.catch_warnings():
-                    warnings.filterwarnings("ignore",
-                                            category=numpy.ComplexWarning)
-                    H = H0+E*HDC+Int*HAC+B*Hz
-                    if return_states:
-                        Eigen = eig(H)
-                        order = numpy.argsort(Eigen[0])
-                        EigenValues[:,i]=Eigen[0][order]
-                        States[:,:,i] = Eigen[1][:,order]
-                    else:
-                        Eigen = eigvals(H)
-                        EigenValues[:,i]=numpy.sort(Eigen)
-            if return_states:
-                return EigenValues,States
-            else:
-                return EigenValues
-
-def Vary_Beta(Hams,fields0,Angles,Molecule_pars,return_states = False):
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
-        This function works differently to the applied field ones. Because beta
-        changes the matrix elements in the Hamiltonian we cannot simply
-        multiply it through. Therefore we have to recalculate the matrix
-        elements on each interation. This makes the function slower.
-
-        input arguments:
-        Hams: list or tuple of hamiltonians. Should all be the same size
-        fields0: initial field conditions, allows for zeeman + Stark effects
-        Angles: Polarisation angles to iterate over
-
-        Molecule_pars: Nmax,I1,I2,a2, arguments to feed to regenerate the
-                        anisotropic Stark shift matrix.
-
-        return_states: Switch to return EigenStates as well as Eigenenergies
-
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
-        states:array of Eigenstates, sorted as in energy.
-    '''
-
-    Nmax,I1,I2,a2 = Molecule_pars
-    H0,Hz,HDC,HAC = Hams
-    E,B,I = fields0
-
-    #warn the user if they've done something silly, so they don't waste time
-
-    if I == 0:
-        warnings.warn("Intensity is zero: nothing will change")
-    else:
-        EigenValues = numpy.zeros((H0.shape[0],len(Angles)))
-        if return_states:
-            States = numpy.zeros((H0.shape[0],H0.shape[0],len(Angles)))
-        for i,beta in enumerate(Angles):
-            HAC = AC_aniso(Nmax,a2,beta,I1,I2)/(2*eps0*c)
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore",category=numpy.ComplexWarning)
-                H = H0+E*HDC+I*HAC+B*Hz
-                if return_states:
-                    Eigen = eig(H)
-                    order = numpy.argsort(Eigen[0])
-                    EigenValues[:,i]=Eigen[0][order]
-                    States[:,:,i] = Eigen[1][:,order]
-                else:
-                    Eigen = eigvals(H)
-                    EigenValues[:,i]=numpy.sort(Eigen)
-        if return_states:
-            return EigenValues,States
-        else:
-            return EigenValues
 
 
 if __name__=="__main__":

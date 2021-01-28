@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: diatom
-Version: 1.0.1
+Version: 1.1.0
 Summary: A package for calculating molecular hyperfine structure.
 Home-page: https://github.com/JakeBlackmore/Diatomic-Py
 Author: Jake Blackmore

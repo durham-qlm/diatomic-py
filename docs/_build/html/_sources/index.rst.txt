@@ -1,0 +1,20 @@
+.. Diatomic-py documentation master file, created by
+   sphinx-quickstart on Wed Jan 27 17:58:29 2021.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to Diatomic-py's documentation!
+=======================================
+Diatomic-py is a python module for computing the interaction between the hyperfine structure of a diatomic molecule and external fields.
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

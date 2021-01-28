@@ -1,7 +1,12 @@
 README.md
 setup.py
+diatom/Calculate.py
+diatom/Fitting.py
 diatom/Hamiltonian.py
+diatom/Legacy.py
+diatom/Plotting.py
 diatom/__init__.py
+diatom/test_script.py
 diatom.egg-info/PKG-INFO
 diatom.egg-info/SOURCES.txt
 diatom.egg-info/dependency_links.txt

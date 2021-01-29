@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import mock
 sys.path.insert(0, os.path.abspath('..'))
 
 
@@ -24,16 +25,21 @@ author = 'Jacob A Blackmore'
 # The full version, including alpha/beta/rc tags
 release = '1.1.0'
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.napoleon'
-]
+extensions = ['sphinx.ext.napoleon']
 
-autodoc_mock_imports = ['pyprind','numpy','matplotlib','sympy','scipy']
+#autodoc_mock_imports = ['pyprind','numpy','matplotlib','sympy','scipy']
+MOCK_MODS = ["numpy","scipy","matplotlib","sympy","pyprind","sympy.physics",
+                "sympy.physics.wigner","scipy.linalg","scipy.constants",
+                "scipy.special","matplotlib.pyplot","matplotlib.gridspec",
+                "matplotlib.colors","matplotlib.patches"]
+for m in MOCK_MODS:
+    sys.modules[m] = mock.Mock()
+    
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

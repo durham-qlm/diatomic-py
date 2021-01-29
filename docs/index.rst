@@ -52,7 +52,7 @@ Full descriptions of all functions can be found using the links below:
 .. toctree::
    :maxdepth: 2
 
-   source/diatom
+   diatom
 
 
 License

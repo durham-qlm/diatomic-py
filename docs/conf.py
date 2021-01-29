@@ -34,9 +34,9 @@ extensions = ['sphinx.ext.napoleon']
 
 #autodoc_mock_imports = ['pyprind','numpy','matplotlib','sympy','scipy']
 #MOCK_MODS = ["numpy","scipy","matplotlib","sympy","pyprind","sympy.physics",
-                "sympy.physics.wigner","scipy.linalg","scipy.constants",
-                "scipy.special","matplotlib.pyplot","matplotlib.gridspec",
-                "matplotlib.colors","matplotlib.patches"]
+#                "sympy.physics.wigner","scipy.linalg","scipy.constants",
+#                "scipy.special","matplotlib.pyplot","matplotlib.gridspec",
+#                "matplotlib.colors","matplotlib.patches"]
 #for m in MOCK_MODS:
 #    sys.modules[m] = mock.Mock()
 

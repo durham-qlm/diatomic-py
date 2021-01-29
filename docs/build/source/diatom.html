@@ -1,0 +1,575 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>diatom package &#8212; Diatomic-py 1.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Diatomic-py 1.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">diatom package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="diatom-package">
+<h1>diatom package<a class="headerlink" href="#diatom-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-diatom.Calculate">
+<span id="diatom-calculate-module"></span><h2>diatom.Calculate module<a class="headerlink" href="#module-diatom.Calculate" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="diatom.Calculate.Build_Hamiltonians">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Build_Hamiltonians</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">Constants</span></em>, <em class="sig-param"><span class="n">zeeman</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">EDC</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">AC</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Build_Hamiltonians" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function builds the hamiltonian matrices for evalutation so that
+the user doesn’t have to rebuild them every time and we can benefit from
+numpy’s ability to do distributed multiplcation.</p>
+<p>Input arguments:
+Nmax: Maximum rotational level to include (float)
+I1_mag,I2_mag, magnitude of the nuclear spins (float)
+Constants: Dict of molecular constants (Dict of floats)
+zeeman,EDC,AC :Switches for turning off parts of the total Hamiltonian</p>
+<blockquote>
+<div><p>can save significant time on calculations where DC and
+AC fields are not required due to nested for loops
+(bool)</p>
+</div></blockquote>
+<p>returns:
+H0,Hz,HDC,HAC: Each is a (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.Export_Energy">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Export_Energy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span></em>, <em class="sig-param"><span class="n">Energy</span></em>, <em class="sig-param"><span class="n">Fields</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">headers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dp</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">format</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Export_Energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>This exports the energy of the states for a</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.Export_State_Comp">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Export_State_Comp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">headers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dp</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">format</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Export_State_Comp" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to export state composition in a human-readable format
+along the first row are optional headers and the labels for the basis States
+in the uncoupled basis.</p>
+<p>the user can supply optional labels for the states in a (x,y) list or array
+where y is the number of states and x is the number of unique labels, for
+instance a list of the N quantum  number for each state.</p>
+<p>they can also (optionally) supply a (x,1) list to include custom headers
+in the first row. If the labels kwarg is included and headers is not,
+then non-descriptive labels are used to ensure correct output.</p>
+<p>by default the output is given to 6 decimal places (truncated) this can be
+adjusted using the kwarg dp</p>
+<p>inputs:
+fname (string) : the filename and path to save the output file
+Nmax (int/float) : the maximum value of N used in the calculation
+I1,I2 (float) : the nuclear spin quantum numbers of nucleus 1 and 2
+States (N,M) ndarray : eigenstates stored in an (N,M) ndarray, N is the</p>
+<blockquote>
+<div><p>number of eigenstates. M is the number of basis
+states.</p>
+</div></blockquote>
+<p>labels (N,X) ndarray : ndarray containing X labels for each of the N states
+headers (X) ndarray-like : Ndarray-like containing descriptions of the labels
+dp (int) : number of decimal places to output the file to [default = 6]
+format (list) :  list of strings for formatting the headers. Defaults to 1 dp.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.LabelStates_F_MF">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_F_MF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_F_MF" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns two lists: the input states labelled by N and MN
+in the order that they are provided. The returned numbers will only be good
+if the state is well -represented in the coupled basis</p>
+<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
+is provided. Each element in the list locs corresponds to the index for the
+states to label.</p>
+<p>Inputs:</p>
+<p>States, Numpy.ndarray of eigenstates, from linalg.eig
+Nmax: maximum rotational state in calculation</p>
+<p>I1 , I2: nuclear spin quantum numbers</p>
+<p>locs: list of indices of states to label</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.LabelStates_I_MI">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_I_MI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_I_MI" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns two lists: the input states labelled by N and MN
+in the order that they are provided. The returned numbers will only be good
+if the state is well -represented in the decoupled basis</p>
+<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
+is provided. Each element in the list locs corresponds to the index for the
+states to label.</p>
+<p>Inputs:</p>
+<p>States, Numpy.ndarray of eigenstates, from linalg.eig
+Nmax: maximum rotational state in calculation</p>
+<p>I1 , I2: nuclear spin quantum numbers</p>
+<p>locs: list of indices of states to label</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.LabelStates_N_MN">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_N_MN</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_N_MN" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns two lists: the input states labelled by N and MN
+in the order that they are provided. The returned numbers will only be good
+if the state is well -represented in the decoupled basis.</p>
+<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
+is provided. Each element in the list locs corresponds to the index for the
+states to label.</p>
+<p>Inputs:</p>
+<p>States, Numpy.ndarray of eigenstates, from linalg.eig
+Nmax: maximum rotational state in calculation</p>
+<p>I1 , I2: nuclear spin quantum numbers</p>
+<p>locs: list of indices of states to label</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.Solve">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Solve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">Constants</span></em>, <em class="sig-param"><span class="n">states</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">zeeman</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">EDC</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">AC</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.SolveQuadratic">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">SolveQuadratic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.SolveQuadratic" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple function to solve the quadratic formula for x. returns the most
+positive value of x supported.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.Sort_Smooth">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Sort_Smooth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Energy</span></em>, <em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">pb</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Sort_Smooth" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a function to ensure that all eigenstates plotted change
+adiabatically, it does this by assuming that step to step the eigenstates
+should vary by only a small amount (i.e. that the  step size is fine) and
+arranging states to maximise the overlap one step to the next.</p>
+<p>Inputs:
+Energy : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
+States: numpy.ndarray containing the states, in the same order as Energy
+pb (bool) : optionally show progress bar</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.TDM">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">TDM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">M</span></em>, <em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">gs</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.TDM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the Transition Dipole Moment between a state  gs
+and a range of states. Returns the TDM in units of the permanent dipole
+moment (d0).</p>
+<p>Inputs:
+Nmax: Maximum rotational quantum number in original calculations
+I1,I2 : nuclear spin quantum numbers
+M: Helicity of Transition, -1 = S+, 0 = Pi, +1 = S-
+States: matrix for eigenstates of problem</p>
+<p>gs: index of ground state.</p>
+<dl class="simple">
+<dt>locs: optional argument to calculate for subset of States, should be an</dt><dd><p>array-like.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.dipole">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">dipole</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">d</span></em>, <em class="sig-param"><span class="n">M</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.dipole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the induced dipole moment operator for a Rigid rotor.
+Expanded to cover state  vectors in the uncoupled hyperfine basis.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-diatom.Fitting">
+<span id="diatom-fitting-module"></span><h2>diatom.Fitting module<a class="headerlink" href="#module-diatom.Fitting" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-diatom.Hamiltonian">
+<span id="diatom-hamiltonian-module"></span><h2>diatom.Hamiltonian module<a class="headerlink" href="#module-diatom.Hamiltonian" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="diatom.Hamiltonian.AC_aniso">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">AC_aniso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">a2</span></em>, <em class="sig-param"><span class="n">Beta</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.AC_aniso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
+like molecule.</p>
+<p>This term is calculated differently to all of the others in this work
+and is based off Jesus Aldegunde’s FORTRAN 77 code. It iterates over
+N,MN,N’,MN’ to build a matrix without hyperfine structure then uses
+kronecker products to expand it into all of the hyperfine states.</p>
+<p>input arguments:</p>
+<p>Nmax: maximum rotational quantum number to calculate (int)
+a2: anisotropic polarisability (float)
+Beta: polarisation angle of the laser in Radians (float)
+I1,I2: Nuclear spin of nucleus 1,2 (float)</p>
+<p>returns:
+H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.AC_iso">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">AC_iso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">a0</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.AC_iso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the effect of the isotropic AC Stark shift for a rigid-rotor
+like molecule.</p>
+<p>This term is calculated differently to all of the others in this work
+and is based off Jesus Aldegunde’s FORTRAN 77 code. It iterates over
+N,MN,N’,MN’ to build a matrix without hyperfine structure then uses
+kronecker products to expand it into all of the hyperfine states.</p>
+<p>input arguments:</p>
+<p>Nmax: maximum rotational quantum number to calculate (int)
+a0: isotropic polarisability (float)
+I1,I2: Nuclear spin of nucleus 1,2 (float)</p>
+<p>returns:
+H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Build_Hamiltonians">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Build_Hamiltonians</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">Constants</span></em>, <em class="sig-param"><span class="n">zeeman</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">EDC</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">AC</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Build_Hamiltonians" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function builds the hamiltonian matrices for evalutation so that
+the user doesn’t have to rebuild them every time and we can benefit from
+numpy’s ability to do distributed multiplcation.</p>
+<p>Input arguments:
+Nmax: Maximum rotational level to include (float)
+I1_mag,I2_mag, magnitude of the nuclear spins (float)
+Constants: Dict of molecular constants (Dict of floats)
+zeeman,EDC,AC :Switches for turning off parts of the total Hamiltonian</p>
+<blockquote>
+<div><p>can save significant time on calculations where DC and
+AC fields are not required due to nested for loops
+(bool)</p>
+</div></blockquote>
+<p>returns:
+H0,Hz,HDC,HAC: Each is a (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.DC">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">DC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">d0</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.DC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the effect of the dc Stark shift for a rigid-rotor like
+molecule.</p>
+<p>This term is calculated differently to all of the others in this work
+and is based off Jesus Aldegunde’s FORTRAN 77 code. It iterates over
+N,MN,N’,MN’ to build a matrix without hyperfine structure then uses
+kronecker products to expand it into all of the hyperfine states.</p>
+<p>input arguments:</p>
+<p>Nmax: maximum rotational quantum number to calculate (int)
+d0: Permanent electric dipole momentum (float)
+I1,I2: Nuclear spin of nucleus 1,2 (float)</p>
+<p>returns:
+H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.ElectricGradient">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">ElectricGradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.ElectricGradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>spherical tensor for the electric field gradient at nucleus i. Depends
+on the rotational states not the nuclear spin states.
+input arguments are:
+Nmax - int. Maximum rotational state to include
+I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Generate_vecs">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Generate_vecs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Generate_vecs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the vectors of the angular momentum operators which we need
+to be able to produce the Hamiltonian</p>
+<p>input arguments:
+Nmax: maximum rotational level to include in calculations (float)
+I1,I2: Nuclear spins of nuclei 1 and 2 (float)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Hyperfine_Ham">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Hyperfine_Ham</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1_mag</span></em>, <em class="sig-param"><span class="n">I2_mag</span></em>, <em class="sig-param"><span class="n">Consts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Hyperfine_Ham" title="Permalink to this definition">¶</a></dt>
+<dd><p>The field-free Hyperfine hamiltonian</p>
+<p>Input arguments:
+Nmax: Maximum rotational level to include (float)
+I1_mag,I2_mag, magnitude of the nuclear spins (float)
+Consts: Dict of molecular constants (Dict of floats)</p>
+<p>returns:
+H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.MakeT2">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">MakeT2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.MakeT2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the spherical tensor T2 from
+two cartesian vectors of operators.</p>
+<p>Inputs are I1,I2 - the output of makevecs</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.QuadMoment">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">QuadMoment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.QuadMoment" title="Permalink to this definition">¶</a></dt>
+<dd><p>spherical tensor for the nuclear quadrupole moment of both nuclei. Depends
+on the nuclear spin states not the rotational states.
+input arguments are:
+Nmax - int. Maximum rotational state to include
+I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Quadrupole">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Quadrupole</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Q</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">Nmax</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Quadrupole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the Quadrupole terms for the hyperfine Hamiltonian using
+spherical tensor algebra.
+input arguments are:
+Q - two-tuple of nuclear electric quadrupole moments in Joules
+Nmax - int. Maximum rotational state to include
+I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Raising_operator">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Raising_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">j</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Raising_operator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Rotational">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Rotational</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N</span></em>, <em class="sig-param"><span class="n">Brot</span></em>, <em class="sig-param"><span class="n">Drot</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Rotational" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the hyperfine-free hamiltonian for the rotational levels of
+a rigid-rotor like molecule. Includes the centrifugal distortion term</p>
+<p>input arguments:
+N: Angular momentum vector for rotation (numpy.ndarry)
+Brot: Rotational constant (float)
+Drot: Centrifugal distortion (float)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.T2_C">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">T2_C</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.T2_C" title="Permalink to this definition">¶</a></dt>
+<dd><p>The irreducible spherical tensors for the spherical harmonics in the
+rotational basis. input arguments are:
+Nmax - int. Maximum rotational state to include
+I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.TensorDot">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">TensorDot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">T1</span></em>, <em class="sig-param"><span class="n">T2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.TensorDot" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to calculate the scalar product of two spherical tensors
+T1 and T2 are lists or numpy arrays that represent the spherical tensors
+lists are indexed from lowest m to highests</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Wigner_D">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Wigner_D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">m</span></em>, <em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">gamma</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Wigner_D" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Wigner D matrix with labels l and m. Alpha,beta,gamma
+are the x-z-x euler angles</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.X_operator">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">X_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.X_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>input arguments:
+J: Magnitude of angular momentum (float)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Y_operator">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Y_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Y_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>input arguments:
+J: Magnitude of angular momentum (float)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Z_operator">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Z_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Z_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>input arguments:
+J: Magnitude of angular momentum (float)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Zeeman">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Zeeman</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Cz</span></em>, <em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Zeeman" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear Zeeman shift, fixed magnetic field along z so only need the
+last component of the angular momentum vector.</p>
+<p>input arguments:
+Cz: Zeeman Coefficient (float)
+J: Angular momentum vector (numpy.ndarray)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.Zeeman_Ham">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Zeeman_Ham</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1_mag</span></em>, <em class="sig-param"><span class="n">I2_mag</span></em>, <em class="sig-param"><span class="n">Consts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Zeeman_Ham" title="Permalink to this definition">¶</a></dt>
+<dd><p>assembles the Zeeman term and generates operator vectors</p>
+<p>Input arguments:
+Nmax: Maximum rotational level to include (float)
+I1_mag,I2_mag, magnitude of the nuclear spins (float)
+Consts: Dict of molecular constants (Dict of floats)</p>
+<p>returns:
+H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.scalar_nuclear">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">scalar_nuclear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Ci</span></em>, <em class="sig-param"><span class="n">J1</span></em>, <em class="sig-param"><span class="n">J2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.scalar_nuclear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the scalar spin-spin term of the HF Hamiltonian
+Input arguments:
+Ci: Scalar spin coupling coefficient (float)
+J1,J2: Angular momentum vector (numpy.ndarray)</p>
+<p>returns:
+Quad: (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
+<blockquote>
+<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.tensor_nuclear">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">tensor_nuclear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">C3</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">Nmax</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.tensor_nuclear" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is to calculate the tensor spin-spin interaction.
+This version uses spherical tensors to calculate the correct off-diagonal
+behaviour.</p>
+<p>Inputs: C3 - spin-spin coupling constant
+I1,I2 - Cartesian Angular momentum operator Vectors
+Nmax - maximum rotational state to include (int)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Hamiltonian.vector_dot">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">vector_dot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.vector_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that can do the dot product of a vector of matrices default
+behaviour of numpy.dot does the elementwise product of the matrices.
+input arguments:
+x,y: Vectors of Angular momentum operators, each element is a JxJ arrays</p>
+<blockquote>
+<div><p>(numpy.ndarray)</p>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="diatom-legacy-module">
+<h2>diatom.Legacy module<a class="headerlink" href="#diatom-legacy-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-diatom.Plotting">
+<span id="diatom-plotting-module"></span><h2>diatom.Plotting module<a class="headerlink" href="#module-diatom.Plotting" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="diatom.Plotting.TDM_plot">
+<code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">TDM_plot</code><span class="sig-paren">(</span><em class="sig-param">energies</em>, <em class="sig-param">States</em>, <em class="sig-param">gs</em>, <em class="sig-param">Nmax</em>, <em class="sig-param">I1</em>, <em class="sig-param">I2</em>, <em class="sig-param">TDMs=None</em>, <em class="sig-param">which=None</em>, <em class="sig-param">pm=1</em>, <em class="sig-param">Offset=0</em>, <em class="sig-param">fig=&lt;Figure size 640x480 with 0 Axes&gt;</em>, <em class="sig-param">log=False</em>, <em class="sig-param">minf=None</em>, <em class="sig-param">maxf=None</em>, <em class="sig-param">prefactor=1</em>, <em class="sig-param">col=None</em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.TDM_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>this function plots a series of energy levels and their transition dipole
+moments from a given ground state.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Plotting.colorline">
+<code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">colorline</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z=None</em>, <em class="sig-param">cmap=&lt;matplotlib.colors.LinearSegmentedColormap object&gt;</em>, <em class="sig-param">norm=&lt;matplotlib.colors.Normalize object&gt;</em>, <em class="sig-param">linewidth=3</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">legend=False</em>, <em class="sig-param">ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.colorline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a colored line with coordinates x and y
+Optionally specify colors in the array z
+Optionally specify a colormap, a norm function and a line width</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Plotting.make_segments">
+<code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">make_segments</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.make_segments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of line segments from x and y coordinates, in the correct format for LineCollection:
+an array of the form   numlines x (points per line) x 2 (x and y) array</p>
+</dd></dl>
+
+</div>
+<div class="section" id="diatom-test-script-module">
+<h2>diatom.test_script module<a class="headerlink" href="#diatom-test-script-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-diatom">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-diatom" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">diatom package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-diatom.Calculate">diatom.Calculate module</a></li>
+<li><a class="reference internal" href="#module-diatom.Fitting">diatom.Fitting module</a></li>
+<li><a class="reference internal" href="#module-diatom.Hamiltonian">diatom.Hamiltonian module</a></li>
+<li><a class="reference internal" href="#diatom-legacy-module">diatom.Legacy module</a></li>
+<li><a class="reference internal" href="#module-diatom.Plotting">diatom.Plotting module</a></li>
+<li><a class="reference internal" href="#diatom-test-script-module">diatom.test_script module</a></li>
+<li><a class="reference internal" href="#module-diatom">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/source/diatom.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Diatomic-py 1.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">diatom package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Jacob A Blackmore.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+    </div>
+  </body>
+</html>

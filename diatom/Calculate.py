@@ -1,4 +1,4 @@
-from diatom.Hamiltonian import *
+from diatom import Hamiltonian
 import numpy
 import warnings
 import pyprind
@@ -106,57 +106,38 @@ K40Rb = {   "I1":4,
 # use.
 
 def Build_Hamiltonians(Nmax,Constants,zeeman=False,EDC=False,AC=False):
-    '''
+    ''' Return the hyperfine hamiltonian.
+
         This function builds the hamiltonian matrices for evalutation so that
         the user doesn't have to rebuild them every time and we can benefit from
         numpy's ability to do distributed multiplcation.
 
-
+        This function just wraps Hamiltonian.Build_Hamiltonians()
 
         Input arguments:
-        Nmax: Maximum rotational level to include (float)
-        I1_mag,I2_mag, magnitude of the nuclear spins (float)
-        Constants: Dict of molecular constants (Dict of floats)
-        zeeman,EDC,AC :Switches for turning off parts of the total Hamiltonian
-                        can save significant time on calculations where DC and
-                        AC fields are not required due to nested for loops
-                        (bool)
+            Nmax (int) - Maximum rotational level to include
+            I1_mag,I2_mag (float) - magnitude of the nuclear spins
+            Constants (Dictionary) - Dict of molecular constants
+            zeeman,EDC,AC (Boolean) - Switches for turning off parts of the total Hamiltonian can save significant time on calculations where DC and AC fields are not required due to nested for loops
 
         returns:
-        H0,Hz,HDC,HAC: Each is a (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x
-           (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.
+            H0,Hz,HDC,HAC (numpy.ndarray): Each of the terms in the Hamiltonian.
     '''
-    I1 = Constants['I1']
-    I2 = Constants['I2']
+    H0,Hz,HDC,HAC = Hamiltonian.Build_Hamiltonians(Nmax,Constants,zeeman,EDC,AC)
 
-    H0 = Hyperfine_Ham(Nmax,I1,I2,Constants)
-    if zeeman:
-        Hz = Zeeman_Ham(Nmax,I1,I2,Constants)
-    else:
-        Hz =0.
-    if EDC:
-        HDC = DC(Nmax,Constants['d0'],I1,I2)
-    else:
-        HDC =0.
-    if AC:
-        HAC = (1./(2*eps0*c))*(AC_iso(Nmax,Constants['a0'],I1,I2)+\
-        AC_aniso(Nmax,Constants['a2'],Constants['Beta'],I1,I2))
-    else:
-        HAC =0.
     return H0,Hz,HDC,HAC
 
-def Solve(Nmax,Constants,states=True,zeeman=False,EDC=False,AC=False):
-
-    H0,Hz,HDC,HAC = Build_Hamiltonians(Nmax,Constants,zeeman,EDC,AC)
-
-
-
-    return eig
-
 def SolveQuadratic(a,b,c):
-    '''
-    simple function to solve the quadratic formula for x. returns the most
+    ''' Solve a quadratic equation
+
+    for a*x^2+b*x+c=0 this is a simple function to solve the quadratic formula for x. returns the most
     positive value of x supported.
+
+    inputs:
+        a,b,c (floats) - coefficients in quadratic
+    returns:
+        x (float) - maximum value of x supported by equation
+
     '''
 
     d = b**2-4*a*c # discriminant
@@ -166,7 +147,9 @@ def SolveQuadratic(a,b,c):
     return max([x1,x2])
 
 def LabelStates_N_MN(States,Nmax,I1,I2,locs=None):
-    ''' This function returns two lists: the input states labelled by N and MN
+    ''' Label states by N,MN
+
+     This function returns two lists: the input states labelled by N and MN
     in the order that they are provided. The returned numbers will only be good
     if the state is well -represented in the decoupled basis.
 
@@ -176,12 +159,13 @@ def LabelStates_N_MN(States,Nmax,I1,I2,locs=None):
 
     Inputs:
 
-    States, Numpy.ndarray of eigenstates, from linalg.eig
-    Nmax: maximum rotational state in calculation
-
-    I1 , I2: nuclear spin quantum numbers
-
-    locs: list of indices of states to label
+        States (Numpy.ndarray) - array of eigenstates, from linalg.eig
+        Nmax (int) - maximum rotational state in calculation
+        I1 , I2 (float) - nuclear spin quantum numbers
+    kwargs:
+        locs (list of ints) - list of indices of states to label
+    returns:
+        Nlabels,MNlabels (list of ints) - list of values of N,MN
     '''
     if locs != None:
         States = States[:,locs]
@@ -199,10 +183,11 @@ def LabelStates_N_MN(States,Nmax,I1,I2,locs=None):
     return Nlabels,MNlabels
 
 def LabelStates_I_MI(States,Nmax,I1,I2,locs = None):
-    ''' This function returns two lists: the input states labelled by N and MN
-    in the order that they are provided. The returned numbers will only be good
-    if the state is well -represented in the decoupled basis
+    ''' Label states by I,MI
 
+     This function returns two lists: the input states labelled by I and MI
+    in the order that they are provided. The returned numbers will only be good
+    if the state is well -represented in the decoupled basis.
 
     Optionally can return the quantum  numbers for a subset if the locs kwarg
     is provided. Each element in the list locs corresponds to the index for the
@@ -210,14 +195,14 @@ def LabelStates_I_MI(States,Nmax,I1,I2,locs = None):
 
     Inputs:
 
-    States, Numpy.ndarray of eigenstates, from linalg.eig
-    Nmax: maximum rotational state in calculation
-
-    I1 , I2: nuclear spin quantum numbers
-
-    locs: list of indices of states to label
+        States (Numpy.ndarray) - array of eigenstates, from linalg.eig
+        Nmax (int) - maximum rotational state in calculation
+        I1 , I2 (float) - nuclear spin quantum numbers
+    kwargs:
+        locs (list of ints) - list of indices of states to label
+    returns:
+        Ilabels,MIlabels (list of ints) - list of values of I,MI
     '''
-
     if locs != None:
         States = States[:,locs]
 
@@ -238,9 +223,11 @@ def LabelStates_I_MI(States,Nmax,I1,I2,locs = None):
     return Ilabels,MIlabels
 
 def LabelStates_F_MF(States,Nmax,I1,I2,locs=None):
-    ''' This function returns two lists: the input states labelled by N and MN
+    ''' Label states by F,MF
+
+     This function returns two lists: the input states labelled by F and MF
     in the order that they are provided. The returned numbers will only be good
-    if the state is well -represented in the coupled basis
+    if the state is well -represented in the decoupled basis.
 
     Optionally can return the quantum  numbers for a subset if the locs kwarg
     is provided. Each element in the list locs corresponds to the index for the
@@ -248,14 +235,14 @@ def LabelStates_F_MF(States,Nmax,I1,I2,locs=None):
 
     Inputs:
 
-    States, Numpy.ndarray of eigenstates, from linalg.eig
-    Nmax: maximum rotational state in calculation
-
-    I1 , I2: nuclear spin quantum numbers
-
-    locs: list of indices of states to label
+        States (Numpy.ndarray) - array of eigenstates, from linalg.eig
+        Nmax (int) - maximum rotational state in calculation
+        I1 , I2 (float) - nuclear spin quantum numbers
+    kwargs:
+        locs (list of ints) - list of indices of states to label
+    returns:
+        Flabels,MFlabels (list of ints) - list of values of F,MF
     '''
-
 
     if locs != None:
         States = States[:,locs]
@@ -281,6 +268,14 @@ def dipole(Nmax,I1,I2,d,M):
     ''' Generates the induced dipole moment operator for a Rigid rotor.
     Expanded to cover state  vectors in the uncoupled hyperfine basis.
 
+    inputs:
+        Nmax (int) - maximum rotational states
+        I1,I2 (float) - nuclear spin quantum numbers
+        d (float) - permanent dipole moment
+        M (float) - index indicating the helicity of the dipole field
+
+    returns:
+        Dmat (numpy.ndarray) - dipole matrix
     '''
     shape = numpy.sum(numpy.array([2*x+1 for x in range(0,Nmax+1)]))
     Dmat = numpy.zeros((shape,shape),dtype= numpy.complex)
@@ -306,20 +301,24 @@ def dipole(Nmax,I1,I2,d,M):
     return Dmat
 
 def TDM(Nmax,I1,I2,M,States,gs,locs=None):
-    ''' Function to calculate the Transition Dipole Moment between a state  gs
+    ''' calculate TDM between gs and States
+
+     Function to calculate the Transition Dipole Moment between a state  gs
     and a range of states. Returns the TDM in units of the permanent dipole
     moment (d0).
 
     Inputs:
-    Nmax: Maximum rotational quantum number in original calculations
-    I1,I2 : nuclear spin quantum numbers
-    M: Helicity of Transition, -1 = S+, 0 = Pi, +1 = S-
-    States: matrix for eigenstates of problem
+        Nmax (int): Maximum rotational quantum number in original calculations
+        I1,I2 (float): nuclear spin quantum numbers
+        M (float): Helicity of Transition, -1 = S+, 0 = Pi, +1 = S-
+        States (numpy.ndarray): matrix for eigenstates of problem output from numpy.linalg.eig
+        gs (int): index of ground state.
+    kwargs:
+        locs (list of ints): optional argument to calculate for subset of States, should be an
+                array-like.
 
-    gs: index of ground state.
-
-    locs: optional argument to calculate for subset of States, should be an
-            array-like.
+    Outputs:
+        TDM(list of floats) - transition dipole moment between gs and States
     '''
 
     dipole_op = dipole(Nmax,I1,I2,1,M)
@@ -333,15 +332,20 @@ def TDM(Nmax,I1,I2,M,States,gs,locs=None):
     return TDM
 
 def Sort_Smooth(Energy,States,pb=False):
-    ''' This is a function to ensure that all eigenstates plotted change
+    ''' Sort states to remove false avoided crossings.
+
+    This is a function to ensure that all eigenstates plotted change
     adiabatically, it does this by assuming that step to step the eigenstates
     should vary by only a small amount (i.e. that the  step size is fine) and
     arranging states to maximise the overlap one step to the next.
 
     Inputs:
-    Energy : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
-    States: numpy.ndarray containing the states, in the same order as Energy
-    pb (bool) : optionally show progress bar
+        Energy (numpy.ndarray) : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
+        States (numpy.ndarray): numpy.ndarray containing the states, in the same order as Energy
+        pb (bool) : optionally show progress bar, requires pyprind. Doesn't work in all environments (Sorry!)
+    Returns:
+        Energy (numpy.ndarray) : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
+        States (numpy.ndarray): numpy.ndarray containing the states, in the same order as Energy E[x,i] -> States[x,:,i]
     '''
     ls = numpy.arange(States.shape[2],dtype="int")
     number_iterations = len(Energy[:,0])
@@ -373,8 +377,22 @@ def Sort_Smooth(Energy,States,pb=False):
 
 def Export_Energy(fname,Energy,Fields=None,labels=None,
                                 headers=None,dp=6,format=None):
-    '''
-    This exports the energy of the states for a
+    ''' Export Energies in spreadsheet format.
+
+    This exports the energy of the states for a calculation in a human-readable spreadsheet format.
+
+    Currently only saves .csv files.
+
+    inputs:
+        fname (string) - file name to save, appends .csv if not present.
+        Energy (numpy.ndarray) - Energies to save
+
+    Kwargs:
+        Fields (numpy.ndarray) - Field variables used in calculation
+        labels (numpy.ndarray) - labels for states
+        headers (list of strings) - header for each of the labels in labels
+        dp (float) - number of decimal places to use for output (default =6)
+        format (list of strings) - list of formats passed to numpy.savetxt for labels
     '''
     # some input sanitisation, ensures that the fname includes an extension
     if fname[-4:]!=".csv":
@@ -455,16 +473,17 @@ def Export_State_Comp(fname,Nmax,I1,I2,States,labels=None,
     adjusted using the kwarg dp
 
     inputs:
-    fname (string) : the filename and path to save the output file
-    Nmax (int/float) : the maximum value of N used in the calculation
-    I1,I2 (float) : the nuclear spin quantum numbers of nucleus 1 and 2
-    States (N,M) ndarray : eigenstates stored in an (N,M) ndarray, N is the
-                            number of eigenstates. M is the number of basis
-                            states.
-    labels (N,X) ndarray : ndarray containing X labels for each of the N states
-    headers (X) ndarray-like : Ndarray-like containing descriptions of the labels
-    dp (int) : number of decimal places to output the file to [default = 6]
-    format (list) :  list of strings for formatting the headers. Defaults to 1 dp.
+        fname (string) : the filename and path to save the output file
+        Nmax (int/float) : the maximum value of N used in the calculation
+        I1,I2 (float) : the nuclear spin quantum numbers of nucleus 1 and 2
+        States (N,M) ndarray : eigenstates stored in an (N,M) ndarray, N is the
+                                number of eigenstates. M is the number of basis
+                                states.
+    kwargs:
+        labels (N,X) ndarray : ndarray containing X labels for each of the N states
+        headers (X) ndarray-like : Ndarray-like containing descriptions of the labels
+        dp (int) : number of decimal places to output the file to [default = 6]
+        format (list) :  list of strings for formatting the headers. Defaults to 1 dp.
 
     '''
 

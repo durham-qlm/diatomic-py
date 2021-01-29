@@ -743,7 +743,7 @@ def Build_Hamiltonians(Nmax,Constants,zeeman=False,EDC=False,AC=False):
             zeeman,EDC,AC (Boolean) - Switches for turning off parts of the total Hamiltonian can save significant time on calculations where DC and AC fields are not required due to nested for loops
 
         returns:
-            H0,Hz,HDC,HAC: Each of the terms in the Hamiltonian.
+            H0,Hz,HDC,HAC (numpy.ndarray): Each of the terms in the Hamiltonian.
     '''
     I1 = Constants['I1']
     I2 = Constants['I2']

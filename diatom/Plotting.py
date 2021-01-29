@@ -10,9 +10,17 @@ h = constants.h
 cwd = os.path.dirname(os.path.abspath(__file__))
 
 def make_segments(x, y):
-    '''
+    ''' segment x and y points
+
     Create list of line segments from x and y coordinates, in the correct format for LineCollection:
     an array of the form   numlines x (points per line) x 2 (x and y) array
+
+    inputs:
+        x,y (numpy.ndarray -like ) - points on lines
+
+    returns:
+        segments (numpy.ndarray) - array of numlines by points per line by 2
+
     '''
 
     points = numpy.array([x, y]).T.reshape(-1, 1, 2)
@@ -23,10 +31,25 @@ def make_segments(x, y):
 def colorline(x, y, z=None, cmap=pyplot.get_cmap('copper'),
                 norm=pyplot.Normalize(0.0, 1.0), linewidth=3, alpha=1.0,
                 legend=False,ax=None):
-    '''
+    '''Plot a line shaded by an extra value.
+
+
     Plot a colored line with coordinates x and y
     Optionally specify colors in the array z
     Optionally specify a colormap, a norm function and a line width
+
+    inputs:
+        x,y (list-like): x and y coordinates to plot
+    kwargs:
+        z (list): Optional third parameter to colour lines by
+        cmap (matplotlib.cmap): colour mapping for z
+        norm (): Normalisation function for mapping z values to colours
+        linewidth (float): width of plotted lines (default =3)
+        alpha (float): value of alpha channel (default = 1)
+        legend (Bool): display a legend (default = False)
+        ax (matplotlib.pyplot.axes): axis object to plot on
+    returns:
+        lc (Collection) - collection of lines
     '''
     if ax == None:
         ax = pyplot.gca()
@@ -50,12 +73,31 @@ def colorline(x, y, z=None, cmap=pyplot.get_cmap('copper'),
     return lc
 
 def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
-            which = None,pm = +1, Offset=0,fig=pyplot.gcf(),
+            pm = +1, Offset=0,fig=pyplot.gcf(),
             log=False,minf=None,maxf=None,prefactor=1e-3,col=None):
 
-    '''
+    ''' Create a TDM plot
+
     this function plots a series of energy levels and their transition dipole
-    moments from a given ground state.
+    moments from a given ground state. In this version a lot of the plotting style
+    is fixed.
+
+    inputs
+        energies (numpy.ndarray) - array of energy levels
+        states (numpy.ndarray) - array of states corresponding to energies such that E[i] -> States[:,i]
+        gs (int) - index for ground state of interest
+        Nmax (int) - maximum rotational quantum number to include
+        I1, I2 (float) - nuclear spins of nuclei 1 and 2
+    Kwargs:
+        TDMs (list of numpy.ndarray) - optional precomputed transition dipole moments in [sigma-,pi,sigma+] order
+        pm (float) - flag for if the transition increases or decreases N (default = 1)
+        Offset (float) - yaxis offset (default = 0)
+        fig (matplotlib.pyplot.figure) - figure object to draw on
+        log (bool) - use logarithmic scaling for TDM plots
+        minf (float) - minimum frequency to show
+        maxf (float) - maximum frequency to show
+        prefactor (float) - scaling factor for all energies
+        col (list) - list of colours for lines (must be at least length 3 )
 
     '''
 

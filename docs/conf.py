@@ -33,7 +33,7 @@ release = '1.1.0'
 extensions = ['sphinx.ext.napoleon'
 ]
 
-autodoc_mock_imports = ['pyprind','numpy','matplotlib','sympy','scipy']
+autodoc_mock_imports = ['pyprind','numpy','matplotlib','sympy','scipy.constants','scipy.linalg','scipy.special']
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

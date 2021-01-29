@@ -1,6 +1,6 @@
 from diatom.Hamiltonian import vector_dot
 import numpy
-from scipy import linalg.block_diag as block_diag
+from scipy.linalg import block_diag
 
 '''
 This module contains code that is incorrect beyond the diagonal elements of the

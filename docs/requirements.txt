@@ -1,0 +1,5 @@
+scipy>=1.1
+numpy>=1.19
+sympy>=1.4
+pyprind>=2.11
+psutil>=5.8

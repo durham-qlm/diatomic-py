@@ -11,13 +11,18 @@ cicumstances the code in Hamiltonian is better.
 
 def tensor_nuclear(C3,I1,I2,N):
     '''
-        The tensor - nuclear spin spin interaction
+        The tensor - nuclear spin spin interaction.
+
+        This version uses cartesian angular momentum matrices and is incorrect.
+        Correct version has off-diagonal terms in N. this only has the diagonals.
+        It is close but only suitable where high-performance requirements replace
+        accuracy requirements.
+
         input arguments:
-        C3: Tensor spin-spin coupling coefficient (float)
-        I1,I2,N: Angular momentum Vectors (numpy.ndarry)
+            C3 (float): Tensor spin-spin coupling coefficient
+            I1,I2,N (lists of numpy.ndarray): Angular momentum Vectors
         returns:
-        Quad: (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x
-           (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.
+            H (numpy.ndarray): Tensor spin-spin term
     '''
     with warnings.catch_warnings():
         # this is a statement to make the code nicer to use, python wants to
@@ -62,12 +67,11 @@ def Quadrupole(Q,I1,I2,N):
         from 10.1103/PhysRev.91.1403, which quotes the quadrupole interaction
          for KBr
          input arguments:
-         Q:Tuple or list of the nuclear quadrupole moments as (Q1,Q2)  (tuple)
-         I1,I2,N: Nuclear spin of nucleus 1,2 and rotational angular momentum
-                  vectory (numpy.ndarray)
+            Q (tuple of floats) : Tuple or list of the nuclear quadrupole moments as (Q1,Q2)
+
+            I1,I2,N (lists of numpy.ndarray): Angular momentum Vectors
         returns:
-        Quad: (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x
-           (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.
+            Quad (numpy.ndarray) - Quadrupole term
     '''
     Q1,Q2 = Q
     with warnings.catch_warnings():

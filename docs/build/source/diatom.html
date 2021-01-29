@@ -44,30 +44,50 @@
 <dl class="py function">
 <dt id="diatom.Calculate.Build_Hamiltonians">
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Build_Hamiltonians</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">Constants</span></em>, <em class="sig-param"><span class="n">zeeman</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">EDC</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">AC</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Build_Hamiltonians" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function builds the hamiltonian matrices for evalutation so that
+<dd><p>Return the hyperfine hamiltonian.</p>
+<p>This function builds the hamiltonian matrices for evalutation so that
 the user doesn’t have to rebuild them every time and we can benefit from
 numpy’s ability to do distributed multiplcation.</p>
-<p>Input arguments:
-Nmax: Maximum rotational level to include (float)
-I1_mag,I2_mag, magnitude of the nuclear spins (float)
-Constants: Dict of molecular constants (Dict of floats)
-zeeman,EDC,AC :Switches for turning off parts of the total Hamiltonian</p>
-<blockquote>
-<div><p>can save significant time on calculations where DC and
-AC fields are not required due to nested for loops
-(bool)</p>
-</div></blockquote>
-<p>returns:
-H0,Hz,HDC,HAC: Each is a (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<p>This function just wraps Hamiltonian.Build_Hamiltonians()</p>
+<dl class="simple">
+<dt>Input arguments:</dt><dd><p>Nmax (int) - Maximum rotational level to include
+I1_mag,I2_mag (float) - magnitude of the nuclear spins
+Constants (Dictionary) - Dict of molecular constants
+zeeman,EDC,AC (Boolean) - Switches for turning off parts of the total Hamiltonian can save significant time on calculations where DC and AC fields are not required due to nested for loops</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Each of the terms in the Hamiltonian.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>H0,Hz,HDC,HAC (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Calculate.Export_Energy">
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Export_Energy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span></em>, <em class="sig-param"><span class="n">Energy</span></em>, <em class="sig-param"><span class="n">Fields</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">headers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dp</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">format</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Export_Energy" title="Permalink to this definition">¶</a></dt>
-<dd><p>This exports the energy of the states for a</p>
+<dd><p>Export Energies in spreadsheet format.</p>
+<p>This exports the energy of the states for a calculation in a human-readable spreadsheet format.</p>
+<p>Currently only saves .csv files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>string</em>) – </p></li>
+<li><p><strong>Energy</strong> (<em>numpy.ndarray</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>Fields (numpy.ndarray) - Field variables used in calculation
+labels (numpy.ndarray) - labels for states
+headers (list of strings) - header for each of the labels in labels
+dp (float) - number of decimal places to use for output (default =6)
+format (list of strings) - list of formats passed to numpy.savetxt for labels</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -84,108 +104,193 @@ in the first row. If the labels kwarg is included and headers is not,
 then non-descriptive labels are used to ensure correct output.</p>
 <p>by default the output is given to 6 decimal places (truncated) this can be
 adjusted using the kwarg dp</p>
-<p>inputs:
-fname (string) : the filename and path to save the output file
-Nmax (int/float) : the maximum value of N used in the calculation
-I1,I2 (float) : the nuclear spin quantum numbers of nucleus 1 and 2
-States (N,M) ndarray : eigenstates stored in an (N,M) ndarray, N is the</p>
-<blockquote>
-<div><p>number of eigenstates. M is the number of basis
-states.</p>
-</div></blockquote>
-<p>labels (N,X) ndarray : ndarray containing X labels for each of the N states
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>string</em>) – the filename and path to save the output file</p></li>
+<li><p><strong>Nmax</strong> (<em>int/float</em>) – the maximum value of N used in the calculation</p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – the nuclear spin quantum numbers of nucleus 1 and 2</p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – the nuclear spin quantum numbers of nucleus 1 and 2</p></li>
+<li><p><strong>States</strong> (<em>N</em><em>,</em><em>M</em>) – eigenstates stored in an (N,M) ndarray, N is the
+number of eigenstates. M is the number of basis
+states.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>kwargs:</dt><dd><p>labels (N,X) ndarray : ndarray containing X labels for each of the N states
 headers (X) ndarray-like : Ndarray-like containing descriptions of the labels
 dp (int) : number of decimal places to output the file to [default = 6]
 format (list) :  list of strings for formatting the headers. Defaults to 1 dp.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Calculate.LabelStates_F_MF">
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_F_MF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_F_MF" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns two lists: the input states labelled by N and MN
-in the order that they are provided. The returned numbers will only be good
-if the state is well -represented in the coupled basis</p>
-<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
-is provided. Each element in the list locs corresponds to the index for the
-states to label.</p>
-<p>Inputs:</p>
-<p>States, Numpy.ndarray of eigenstates, from linalg.eig
-Nmax: maximum rotational state in calculation</p>
-<p>I1 , I2: nuclear spin quantum numbers</p>
-<p>locs: list of indices of states to label</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="diatom.Calculate.LabelStates_I_MI">
-<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_I_MI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_I_MI" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns two lists: the input states labelled by N and MN
-in the order that they are provided. The returned numbers will only be good
-if the state is well -represented in the decoupled basis</p>
-<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
-is provided. Each element in the list locs corresponds to the index for the
-states to label.</p>
-<p>Inputs:</p>
-<p>States, Numpy.ndarray of eigenstates, from linalg.eig
-Nmax: maximum rotational state in calculation</p>
-<p>I1 , I2: nuclear spin quantum numbers</p>
-<p>locs: list of indices of states to label</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="diatom.Calculate.LabelStates_N_MN">
-<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_N_MN</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_N_MN" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns two lists: the input states labelled by N and MN
+<dd><p>Label states by F,MF</p>
+<p>This function returns two lists: the input states labelled by F and MF
 in the order that they are provided. The returned numbers will only be good
 if the state is well -represented in the decoupled basis.</p>
 <p>Optionally can return the quantum  numbers for a subset if the locs kwarg
 is provided. Each element in the list locs corresponds to the index for the
 states to label.</p>
-<p>Inputs:</p>
-<p>States, Numpy.ndarray of eigenstates, from linalg.eig
-Nmax: maximum rotational state in calculation</p>
-<p>I1 , I2: nuclear spin quantum numbers</p>
-<p>locs: list of indices of states to label</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>States</strong> (<em>Numpy.ndarray</em>) – </p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>kwargs:</dt><dd><p>locs (list of ints) - list of indices of states to label</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Flabels,MFlabels (list of ints) - list of values of F,MF</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
-<dt id="diatom.Calculate.Solve">
-<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Solve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">Constants</span></em>, <em class="sig-param"><span class="n">states</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">zeeman</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">EDC</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">AC</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Solve" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="diatom.Calculate.LabelStates_I_MI">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_I_MI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_I_MI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label states by I,MI</p>
+<p>This function returns two lists: the input states labelled by I and MI
+in the order that they are provided. The returned numbers will only be good
+if the state is well -represented in the decoupled basis.</p>
+<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
+is provided. Each element in the list locs corresponds to the index for the
+states to label.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>States</strong> (<em>Numpy.ndarray</em>) – </p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>kwargs:</dt><dd><p>locs (list of ints) - list of indices of states to label</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Ilabels,MIlabels (list of ints) - list of values of I,MI</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Calculate.LabelStates_N_MN">
+<code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">LabelStates_N_MN</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.LabelStates_N_MN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Label states by N,MN</p>
+<p>This function returns two lists: the input states labelled by N and MN
+in the order that they are provided. The returned numbers will only be good
+if the state is well -represented in the decoupled basis.</p>
+<p>Optionally can return the quantum  numbers for a subset if the locs kwarg
+is provided. Each element in the list locs corresponds to the index for the
+states to label.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>States</strong> (<em>Numpy.ndarray</em>) – </p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>kwargs:</dt><dd><p>locs (list of ints) - list of indices of states to label</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Nlabels,MNlabels (list of ints) - list of values of N,MN</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Calculate.SolveQuadratic">
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">SolveQuadratic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">c</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.SolveQuadratic" title="Permalink to this definition">¶</a></dt>
-<dd><p>simple function to solve the quadratic formula for x. returns the most
+<dd><p>Solve a quadratic equation</p>
+<p>for a*x^2+b*x+c=0 this is a simple function to solve the quadratic formula for x. returns the most
 positive value of x supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>floats</em>) – </p></li>
+<li><p><strong>b</strong> (<em>floats</em>) – </p></li>
+<li><p><strong>c</strong> (<em>floats</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>x (float) - maximum value of x supported by equation</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Calculate.Sort_Smooth">
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">Sort_Smooth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Energy</span></em>, <em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">pb</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.Sort_Smooth" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a function to ensure that all eigenstates plotted change
+<dd><p>Sort states to remove false avoided crossings.</p>
+<p>This is a function to ensure that all eigenstates plotted change
 adiabatically, it does this by assuming that step to step the eigenstates
 should vary by only a small amount (i.e. that the  step size is fine) and
 arranging states to maximise the overlap one step to the next.</p>
-<p>Inputs:
-Energy : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
-States: numpy.ndarray containing the states, in the same order as Energy
-pb (bool) : optionally show progress bar</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Energy</strong> (<em>numpy.ndarray</em>) – numpy.ndarray containing the eigenergies, as from numpy.linalg.eig</p></li>
+<li><p><strong>States</strong> (<em>numpy.ndarray</em>) – numpy.ndarray containing the states, in the same order as Energy</p></li>
+<li><p><strong>pb</strong> (<em>bool</em>) – optionally show progress bar, requires pyprind. Doesn’t work in all environments (Sorry!)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
+States (numpy.ndarray): numpy.ndarray containing the states, in the same order as Energy E[x,i] -&gt; States[x,:,i]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Energy (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Calculate.TDM">
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">TDM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">M</span></em>, <em class="sig-param"><span class="n">States</span></em>, <em class="sig-param"><span class="n">gs</span></em>, <em class="sig-param"><span class="n">locs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.TDM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to calculate the Transition Dipole Moment between a state  gs
+<dd><p>calculate TDM between gs and States</p>
+<p>Function to calculate the Transition Dipole Moment between a state  gs
 and a range of states. Returns the TDM in units of the permanent dipole
 moment (d0).</p>
-<p>Inputs:
-Nmax: Maximum rotational quantum number in original calculations
-I1,I2 : nuclear spin quantum numbers
-M: Helicity of Transition, -1 = S+, 0 = Pi, +1 = S-
-States: matrix for eigenstates of problem</p>
-<p>gs: index of ground state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – Maximum rotational quantum number in original calculations</p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – nuclear spin quantum numbers</p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – nuclear spin quantum numbers</p></li>
+<li><p><strong>M</strong> (<em>float</em>) – Helicity of Transition, -1 = S+, 0 = Pi, +1 = S-</p></li>
+<li><p><strong>States</strong> (<em>numpy.ndarray</em>) – matrix for eigenstates of problem output from numpy.linalg.eig</p></li>
+<li><p><strong>gs</strong> (<em>int</em>) – index of ground state.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="simple">
-<dt>locs: optional argument to calculate for subset of States, should be an</dt><dd><p>array-like.</p>
+<dt>kwargs:</dt><dd><dl class="simple">
+<dt>locs (list of ints): optional argument to calculate for subset of States, should be an</dt><dd><p>array-like.</p>
+</dd>
+</dl>
+</dd>
+<dt>Outputs:</dt><dd><p>TDM(list of floats) - transition dipole moment between gs and States</p>
 </dd>
 </dl>
 </dd></dl>
@@ -195,316 +300,849 @@ States: matrix for eigenstates of problem</p>
 <code class="sig-prename descclassname">diatom.Calculate.</code><code class="sig-name descname">dipole</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">d</span></em>, <em class="sig-param"><span class="n">M</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Calculate.dipole" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates the induced dipole moment operator for a Rigid rotor.
 Expanded to cover state  vectors in the uncoupled hyperfine basis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+<li><p><strong>d</strong> (<em>float</em>) – </p></li>
+<li><p><strong>M</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dmat (numpy.ndarray) - dipole matrix</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-diatom.Fitting">
-<span id="diatom-fitting-module"></span><h2>diatom.Fitting module<a class="headerlink" href="#module-diatom.Fitting" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-diatom.Hamiltonian">
 <span id="diatom-hamiltonian-module"></span><h2>diatom.Hamiltonian module<a class="headerlink" href="#module-diatom.Hamiltonian" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="diatom.Hamiltonian.AC_aniso">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">AC_aniso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">a2</span></em>, <em class="sig-param"><span class="n">Beta</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.AC_aniso" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
+<dd><p>Calculate anisotropic ac stark shift.</p>
+<p>Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
 like molecule.</p>
 <p>This term is calculated differently to all of the others in this work
 and is based off Jesus Aldegunde’s FORTRAN 77 code. It iterates over
 N,MN,N’,MN’ to build a matrix without hyperfine structure then uses
 kronecker products to expand it into all of the hyperfine states.</p>
-<p>input arguments:</p>
-<p>Nmax: maximum rotational quantum number to calculate (int)
-a2: anisotropic polarisability (float)
-Beta: polarisation angle of the laser in Radians (float)
-I1,I2: Nuclear spin of nucleus 1,2 (float)</p>
-<p>returns:
-H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>a2</strong> (<em>float</em>) – </p></li>
+<li><p><strong>Beta</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hamiltonian in joules</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>H (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.AC_iso">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">AC_iso</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">a0</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.AC_iso" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the effect of the isotropic AC Stark shift for a rigid-rotor
+<dd><p>Calculate isotropic Stark shifts</p>
+<p>Generates the effect of the isotropic AC Stark shift for a rigid-rotor
 like molecule.</p>
 <p>This term is calculated differently to all of the others in this work
 and is based off Jesus Aldegunde’s FORTRAN 77 code. It iterates over
 N,MN,N’,MN’ to build a matrix without hyperfine structure then uses
 kronecker products to expand it into all of the hyperfine states.</p>
-<p>input arguments:</p>
-<p>Nmax: maximum rotational quantum number to calculate (int)
-a0: isotropic polarisability (float)
-I1,I2: Nuclear spin of nucleus 1,2 (float)</p>
-<p>returns:
-H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em><em>) </em><em>- maximum rotational quantum number to calculate</em><em> (</em><em>int</em>) – </p></li>
+<li><p><strong>a0</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>H (numpy.ndarray) - isotropic AC Stark Hamiltonian</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Build_Hamiltonians">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Build_Hamiltonians</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">Constants</span></em>, <em class="sig-param"><span class="n">zeeman</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">EDC</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">AC</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Build_Hamiltonians" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function builds the hamiltonian matrices for evalutation so that
+<dd><p>Return the hyperfine hamiltonian.</p>
+<p>This function builds the hamiltonian matrices for evalutation so that
 the user doesn’t have to rebuild them every time and we can benefit from
 numpy’s ability to do distributed multiplcation.</p>
-<p>Input arguments:
-Nmax: Maximum rotational level to include (float)
-I1_mag,I2_mag, magnitude of the nuclear spins (float)
-Constants: Dict of molecular constants (Dict of floats)
-zeeman,EDC,AC :Switches for turning off parts of the total Hamiltonian</p>
-<blockquote>
-<div><p>can save significant time on calculations where DC and
-AC fields are not required due to nested for loops
-(bool)</p>
-</div></blockquote>
-<p>returns:
-H0,Hz,HDC,HAC: Each is a (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1_mag</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2_mag</strong> (<em>float</em>) – </p></li>
+<li><p><strong>Constants</strong> (<em>Dictionary</em>) – </p></li>
+<li><p><strong>zeeman</strong> (<em>Boolean</em>) – </p></li>
+<li><p><strong>EDC</strong> (<em>Boolean</em>) – </p></li>
+<li><p><strong>AC</strong> (<em>Boolean</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Each of the terms in the Hamiltonian.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>H0,Hz,HDC,HAC (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.DC">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">DC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">d0</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.DC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the effect of the dc Stark shift for a rigid-rotor like
+<dd><p>calculate HDC for a diatomic molecule</p>
+<p>Generates the effect of the dc Stark shift for a rigid-rotor like
 molecule.</p>
 <p>This term is calculated differently to all of the others in this work
 and is based off Jesus Aldegunde’s FORTRAN 77 code. It iterates over
 N,MN,N’,MN’ to build a matrix without hyperfine structure then uses
 kronecker products to expand it into all of the hyperfine states.</p>
-<p>input arguments:</p>
-<p>Nmax: maximum rotational quantum number to calculate (int)
-d0: Permanent electric dipole momentum (float)
-I1,I2: Nuclear spin of nucleus 1,2 (float)</p>
-<p>returns:
-H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>d0</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>H (numpy.ndarray) - DC Stark Hamiltonian in joules</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="diatom.Hamiltonian.DebyeSI">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">DebyeSI</code><em class="property"> = 3.33564e-30</em><a class="headerlink" href="#diatom.Hamiltonian.DebyeSI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conversion factor from debyes to J/V/m</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.ElectricGradient">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">ElectricGradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.ElectricGradient" title="Permalink to this definition">¶</a></dt>
-<dd><p>spherical tensor for the electric field gradient at nucleus i. Depends
-on the rotational states not the nuclear spin states.
-input arguments are:
-Nmax - int. Maximum rotational state to include
-I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+<dd><p>Calculate electric field gradient at the nucleus.</p>
+<p>spherical tensor for the electric field gradient at nucleus i. Depends
+on the rotational states not the nuclear spin states. Returns a spherical
+tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T (list of numpy.ndarray) - length-5 list of numpy.ndarrays</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Generate_vecs">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Generate_vecs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Generate_vecs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate the vectors of the angular momentum operators which we need
+<dd><p>Build N, I1, I2 angular momentum vectors</p>
+<p>Generate the vectors of the angular momentum operators which we need
 to be able to produce the Hamiltonian</p>
-<p>input arguments:
-Nmax: maximum rotational level to include in calculations (float)
-I1,I2: Nuclear spins of nuclei 1 and 2 (float)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>float</em>) – maximum rotational level to include in calculations</p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – Nuclear spins of nuclei 1 and 2</p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – Nuclear spins of nuclei 1 and 2</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>length-3 list of (2Nmax+1)*(2I1+1)*(2I2+1) square numpy arrays</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>N_vec,I1_vec,I2_vec (list of numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Hyperfine_Ham">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Hyperfine_Ham</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1_mag</span></em>, <em class="sig-param"><span class="n">I2_mag</span></em>, <em class="sig-param"><span class="n">Consts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Hyperfine_Ham" title="Permalink to this definition">¶</a></dt>
-<dd><p>The field-free Hyperfine hamiltonian</p>
-<p>Input arguments:
-Nmax: Maximum rotational level to include (float)
-I1_mag,I2_mag, magnitude of the nuclear spins (float)
-Consts: Dict of molecular constants (Dict of floats)</p>
-<p>returns:
-H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dd><p>Calculate the field-free Hyperfine hamiltonian</p>
+<p>Wrapper to call all of the functions that are appropriate for the singlet-sigma hyperfine hamiltonian.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1_mag</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2_mag</strong> (<em>float</em>) – </p></li>
+<li><p><strong>Consts</strong> (<em>Dictionary</em>) – Dict of molecular constants</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hamiltonian for the hyperfine structure in joules</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>H0</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="diatom.Hamiltonian.K40Rb">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">K40Rb</code><em class="property"> = {'Beta': 0, 'Brot': 7.377466382536e-25, 'C1': -1.59688287964e-32, 'C2': 2.77963638178e-31, 'C3': -3.19376575928e-32, 'C4': -1.3442970897152e-30, 'Drot': 0.0, 'I1': 4, 'I2': 1.5, 'Mu1': -1.6342921628496934e-27, 'Mu2': 9.231003480658544e-27, 'MuN': 7.071097178600001e-29, 'Q1': 2.06070778244e-28, 'Q2': -9.82646186932e-28, 'a0': 3.53169533132e-32, 'a2': 4.4195887166799994e-32, 'd0': 2.0680968e-30}</em><a class="headerlink" href="#diatom.Hamiltonian.K40Rb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Molecular constants for the 40K87Rb molecule</p>
+<p>Constants are all in SI units, included are:</p>
+<ul class="simple">
+<li><p>I1, I2 = Nuclear spins</p></li>
+<li><p>d0 - permanent dipole moment</p></li>
+<li><p>Brot - rotational constant</p></li>
+<li><p>Drot - Centrifugal distortion coefficient</p></li>
+<li><p>Q1,Q2 - Nuclear quadrupole moments</p></li>
+<li><p>C1,C2 - Nuclear Spin -rotation coefficients</p></li>
+<li><p>C3 - Tensor Spin-Spin coefficient</p></li>
+<li><p>C4 - Scalar spin-spin coefficient</p></li>
+<li><p>MuN - Rotational magnetic moment</p></li>
+<li><p>Mu1,Mu2 - Nuclear magnetic moments (shielded)</p></li>
+<li><p>a0 - isotropic polarisability of the molecule ( at 1550 nm)</p></li>
+<li><p>a2 - anisotropic polarisability of the molecule ( at 1550 nm)</p></li>
+<li><p>beta - default polarisation angle of a trapping laser</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py data">
+<dt id="diatom.Hamiltonian.K41Cs">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">K41Cs</code><em class="property"> = {'Beta': 0, 'Brot': 5.83310173403304e-25, 'C1': 2.981731518e-33, 'C2': 2.456946770832e-31, 'C3': 6.559809339600001e-33, 'C4': 4.16117198512e-31, 'Drot': 0.0, 'I1': 1.5, 'I2': 3.5, 'Mu1': 7.212937322011493e-28, 'Mu2': 3.7038569666843475e-27, 'MuN': 0.0, 'Q1': -1.4643614788399999e-28, 'Q2': 4.96955253e-29, 'a0': 5.1570703121319996e-27, 'a2': 0, 'd0': 6.1375776e-30}</em><a class="headerlink" href="#diatom.Hamiltonian.K41Cs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Molecular constants for the 41K133Cs molecule</p>
+<p>Constants are all in SI units, included are:</p>
+<ul class="simple">
+<li><p>I1, I2 = Nuclear spins</p></li>
+<li><p>d0 - permanent dipole moment</p></li>
+<li><p>Brot - rotational constant</p></li>
+<li><p>Drot - Centrifugal distortion coefficient</p></li>
+<li><p>Q1,Q2 - Nuclear quadrupole moments</p></li>
+<li><p>C1,C2 - Nuclear Spin -rotation coefficients</p></li>
+<li><p>C3 - Tensor Spin-Spin coefficient</p></li>
+<li><p>C4 - Scalar spin-spin coefficient</p></li>
+<li><p>MuN - Rotational magnetic moment</p></li>
+<li><p>Mu1,Mu2 - Nuclear magnetic moments (shielded)</p></li>
+<li><p>a0 - isotropic polarisability of the molecule ( at 1550 nm)</p></li>
+<li><p>a2 - anisotropic polarisability of the molecule ( at 1550 nm)</p></li>
+<li><p>beta - default polarisation angle of a trapping laser</p></li>
+</ul>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.MakeT2">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">MakeT2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.MakeT2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct the spherical tensor T2 from
-two cartesian vectors of operators.</p>
-<p>Inputs are I1,I2 - the output of makevecs</p>
+<dd><p>Construct the spherical tensor T2 from two cartesian vectors of operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>I1</strong> (<em>list of numpy.ndarray</em>) – the output of makevecs</p></li>
+<li><p><strong>I2</strong> (<em>list of numpy.ndarray</em>) – the output of makevecs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>T (list of numpy.ndarray) - T^2(I1,I2) length-5 list of spherical angular momentum operators</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.QuadMoment">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">QuadMoment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.QuadMoment" title="Permalink to this definition">¶</a></dt>
-<dd><p>spherical tensor for the nuclear quadrupole moment of both nuclei. Depends
+<dd><p>Calculate the nuclear electric quadrupole moments of nuclei 1 and 2.</p>
+<p>spherical tensor for the nuclear quadrupole moment of both nuclei. Depends
 on the nuclear spin states not the rotational states.
-input arguments are:
-Nmax - int. Maximum rotational state to include
-I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+:param Nmax:
+:type Nmax: int
+:param I1:
+:type I1: float
+:param I2:
+:type I2: float</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>T (list of numpy.ndarray) - length-5 list of numpy.ndarrays</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Quadrupole">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Quadrupole</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Q</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">Nmax</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Quadrupole" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the Quadrupole terms for the hyperfine Hamiltonian using
-spherical tensor algebra.
-input arguments are:
-Q - two-tuple of nuclear electric quadrupole moments in Joules
-Nmax - int. Maximum rotational state to include
-I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+<dd><p>Calculate Hquad, the nuclear electric quadrupole interaction energy</p>
+<p>Calculates the Quadrupole terms for the hyperfine Hamiltonian using
+spherical tensor algebra. Requires the nuclear quadrupole moments and
+electric field gradients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q</strong> (<em>tuple of floats</em>) – </p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hquad (numpy.ndarray) - numpy array with shape (2I1+1)*(2I2+1)*sum([(2*x+1) for x in range(Nmax+1)])</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Raising_operator">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Raising_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">j</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Raising_operator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Creates the angular momentum raising operator for j</p>
+<p>In the j,mj basis running from max(mj) to min (mj) creates a matrix that represents the operator j+|j,mj&gt; = |j,mj+1&gt;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>j</strong> (<em>float</em>) – value of the angular momentum</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array representing the operator J+, has shape ((2j+1),(2j+1))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>J+ (numpy.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="diatom.Hamiltonian.RbCs">
+<code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">RbCs</code><em class="property"> = {'Beta': 0, 'Brot': 3.2479272181926925e-25, 'C1': 6.520052919360001e-32, 'C2': 1.286782801768e-31, 'C3': 1.274855875696e-31, 'C4': 1.2602093255585722e-29, 'Drot': 1.373584319292e-31, 'I1': 1.5, 'I2': 3.5, 'Mu1': 9.2404087773205e-27, 'Mu2': 3.7027295297369e-27, 'MuN': 3.13148589338e-29, 'Q1': -5.3624122226715995e-28, 'Q2': 3.974316809992e-29, 'a0': 3.3305300916216236e-38, 'a2': 3.292608214340784e-38, 'binding': 7.57148667506693e-20, 'd0': 4.0861590000000005e-30}</em><a class="headerlink" href="#diatom.Hamiltonian.RbCs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Molecular constants for the 87Rb133Cs molecule.</p>
+<p>Constants are all in SI units, included are:</p>
+<ul class="simple">
+<li><p>I1, I2 = Nuclear spins</p></li>
+<li><p>d0 - permanent dipole moment</p></li>
+<li><p>Brot - rotational constant</p></li>
+<li><p>Drot - Centrifugal distortion coefficient</p></li>
+<li><p>Q1,Q2 - Nuclear quadrupole moments</p></li>
+<li><p>C1,C2 - Nuclear Spin -rotation coefficients</p></li>
+<li><p>C3 - Tensor Spin-Spin coefficient</p></li>
+<li><p>C4 - Scalar spin-spin coefficient</p></li>
+<li><p>MuN - Rotational magnetic moment</p></li>
+<li><p>Mu1,Mu2 - Nuclear magnetic moments (shielded)</p></li>
+<li><p>a0 - isotropic polarisability of the molecule ( at 1550 nm)</p></li>
+<li><p>a2 - anisotropic polarisability of the molecule ( at 1550 nm)</p></li>
+<li><p>beta - default polarisation angle of a trapping laser</p></li>
+</ul>
+</dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Rotational">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Rotational</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N</span></em>, <em class="sig-param"><span class="n">Brot</span></em>, <em class="sig-param"><span class="n">Drot</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Rotational" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the hyperfine-free hamiltonian for the rotational levels of
-a rigid-rotor like molecule. Includes the centrifugal distortion term</p>
-<p>input arguments:
-N: Angular momentum vector for rotation (numpy.ndarry)
-Brot: Rotational constant (float)
-Drot: Centrifugal distortion (float)</p>
+<dd><p>Rigid rotor rotational structure</p>
+<p>Generates the hyperfine-free hamiltonian for the rotational levels of
+a rigid-rotor like molecule. Includes the centrifugal distortion term.</p>
+<p>Matrix is returned in the N,MN basis with MN going from maximum to minimum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> (<em>list of numpy.ndarray</em>) – </p></li>
+<li><p><strong>Brot</strong> (<em>float</em>) – </p></li>
+<li><p><strong>Drot</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hrot (numpy.ndarray) - hamiltonian for rotation in the N,MN basis</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.T2_C">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">T2_C</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.T2_C" title="Permalink to this definition">¶</a></dt>
 <dd><p>The irreducible spherical tensors for the spherical harmonics in the
-rotational basis. input arguments are:
-Nmax - int. Maximum rotational state to include
-I1,I2 - float. The nuclear spins of nucleus 1 and 2</p>
+rotational basis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – Maximum rotational state to include</p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – The nuclear spins of nucleus 1 and 2</p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – The nuclear spins of nucleus 1 and 2</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>spherical tensor T^2(C). Each element is a spherical operator</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>T (list of numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.TensorDot">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">TensorDot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">T1</span></em>, <em class="sig-param"><span class="n">T2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.TensorDot" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function to calculate the scalar product of two spherical tensors
+<dd><p>Product of two rank-2 spherical tensors T1, T2</p>
+<p>A function to calculate the scalar product of two spherical tensors
 T1 and T2 are lists or numpy arrays that represent the spherical tensors
 lists are indexed from lowest m to highests</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T1</strong> (<em>list of numpy.ndarray</em>) – </p></li>
+<li><p><strong>T2</strong> (<em>list of numpy.ndarray</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>X (numpy.ndarray) - scalar product of spherical tensors</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Wigner_D">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Wigner_D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">l</span></em>, <em class="sig-param"><span class="n">m</span></em>, <em class="sig-param"><span class="n">alpha</span></em>, <em class="sig-param"><span class="n">beta</span></em>, <em class="sig-param"><span class="n">gamma</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Wigner_D" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Wigner D matrix with labels l and m. Alpha,beta,gamma
-are the x-z-x euler angles</p>
+<dd><p>The Wigner D matrix with labels l and m.</p>
+<p>Calculates the Wigner D Matrix for the given Alpha,beta,gamma in radians.
+The wigner-D matrices represent rotations of angular momentum operators.
+The indices l and m determine the value of the matrix.
+The second index (m’) is always zero.</p>
+<p>The input angles are the x-z-x euler angles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>l</strong> (<em>int</em>) – order of wigner Matrix</p></li>
+<li><p><strong>m</strong> (<em>float</em>) – first index of Wigner Matrix</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – x,z,x Euler angles in radians</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – x,z,x Euler angles in radians</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – x,z,x Euler angles in radians</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of the wigner-D matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>D (float)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.X_operator">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">X_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.X_operator" title="Permalink to this definition">¶</a></dt>
-<dd><p>input arguments:
-J: Magnitude of angular momentum (float)</p>
+<dd><p>operator for X component of J</p>
+<p>Creates the Cartesian operator Jx for a given J</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>float</em>) – Magnitude of angular momentum</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>2J+1 square numpy array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Jx (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Y_operator">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Y_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Y_operator" title="Permalink to this definition">¶</a></dt>
-<dd><p>input arguments:
-J: Magnitude of angular momentum (float)</p>
+<dd><p>operator for Y component of J</p>
+<p>Creates the Cartesian operator Jy for a given J</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>float</em>) – Magnitude of angular momentum</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>2J+1 square numpy array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Jy (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Z_operator">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Z_operator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Z_operator" title="Permalink to this definition">¶</a></dt>
-<dd><p>input arguments:
-J: Magnitude of angular momentum (float)</p>
+<dd><p>operator for Z component of J</p>
+<p>Creates the Cartesian operator Jz for a given J. This is diagonal in the j,mj basis such that jz|j,mj&gt; = mj|j,mj&gt;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>J</strong> (<em>float</em>) – Magnitude of angular momentum</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>2J+1 square numpy array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Jz (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Zeeman">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Zeeman</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Cz</span></em>, <em class="sig-param"><span class="n">J</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Zeeman" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linear Zeeman shift, fixed magnetic field along z so only need the
+<dd><p>Calculate the Zeeman effect for a magnetic field along z</p>
+<p>Linear Zeeman shift, fixed magnetic field along z so only need the
 last component of the angular momentum vector.</p>
-<p>input arguments:
-Cz: Zeeman Coefficient (float)
-J: Angular momentum vector (numpy.ndarray)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Cz</strong> (<em>float</em>) – </p></li>
+<li><p><strong>J</strong> (<em>list of numpy.ndarray</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hz (numpy.ndarray) - Zeeman Hamiltonian</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.Zeeman_Ham">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">Zeeman_Ham</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Nmax</span></em>, <em class="sig-param"><span class="n">I1_mag</span></em>, <em class="sig-param"><span class="n">I2_mag</span></em>, <em class="sig-param"><span class="n">Consts</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.Zeeman_Ham" title="Permalink to this definition">¶</a></dt>
-<dd><p>assembles the Zeeman term and generates operator vectors</p>
-<p>Input arguments:
-Nmax: Maximum rotational level to include (float)
-I1_mag,I2_mag, magnitude of the nuclear spins (float)
-Consts: Dict of molecular constants (Dict of floats)</p>
-<p>returns:
-H: Hamiltonian, (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dd><p>Assembles the Zeeman term and generates operator vectors</p>
+<p>Calculates the Zeeman effect for a magnetic field on a singlet-sigma molecule.
+There is no electronic term and the magnetic field is fixed to be along the z axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1_mag</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2_mag</strong> (<em>float</em>) – </p></li>
+<li><p><strong>Consts</strong> (<em>Dictionary</em>) – Dict of molecular constants</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hamiltonian for the zeeman effect</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Hz (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.scalar_nuclear">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">scalar_nuclear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Ci</span></em>, <em class="sig-param"><span class="n">J1</span></em>, <em class="sig-param"><span class="n">J2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.scalar_nuclear" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the scalar spin-spin term of the HF Hamiltonian
-Input arguments:
-Ci: Scalar spin coupling coefficient (float)
-J1,J2: Angular momentum vector (numpy.ndarray)</p>
-<p>returns:
-Quad: (2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1)x</p>
-<blockquote>
-<div><p>(2*Nmax+1)*(2*I1_mag+1)*(2*I2_mag+1) array.</p>
-</div></blockquote>
+<dd><p>Calculate the scalar spin-spin interaction term</p>
+<p>Returns the scalar spin-spin term of the HF Hamiltonian</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Ci</strong> (<em>float</em>) – </p></li>
+<li><p><strong>J1</strong> (<em>list of numpy.ndarray</em>) – </p></li>
+<li><p><strong>J2</strong> (<em>list of numpy.ndarray</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>H (numpy.ndarray) - Hamiltonian for spin-spin interaction</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.tensor_nuclear">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">tensor_nuclear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">C3</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">Nmax</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.tensor_nuclear" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function is to calculate the tensor spin-spin interaction.
+<dd><p>Calculate the tensor spin-spin interaction.</p>
+<p>This function is to calculate the tensor spin-spin interaction.
 This version uses spherical tensors to calculate the correct off-diagonal
 behaviour.</p>
-<p>Inputs: C3 - spin-spin coupling constant
-I1,I2 - Cartesian Angular momentum operator Vectors
-Nmax - maximum rotational state to include (int)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C3</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Hss (numpy.ndarray) - Hamiltonian for tensor spin-spin interaction</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Hamiltonian.vector_dot">
 <code class="sig-prename descclassname">diatom.Hamiltonian.</code><code class="sig-name descname">vector_dot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Hamiltonian.vector_dot" title="Permalink to this definition">¶</a></dt>
-<dd><p>A function that can do the dot product of a vector of matrices default
-behaviour of numpy.dot does the elementwise product of the matrices.
-input arguments:
-x,y: Vectors of Angular momentum operators, each element is a JxJ arrays</p>
-<blockquote>
-<div><p>(numpy.ndarray)</p>
-</div></blockquote>
+<dd><p>Cartesian dot product of two vectors of operators x,y</p>
+<p>A function that can do the dot product of a vector of matrices default
+behaviour of numpy.dot does the elementwise product of the matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy.ndarray</em>) – length-3 Vectors of Angular momentum operators, each element is a JxJ arrays</p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – length-3 Vectors of Angular momentum operators, each element is a JxJ arrays</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>result of the dot product, JxJ array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Z (numpy.ndarray)</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
-<div class="section" id="diatom-legacy-module">
-<h2>diatom.Legacy module<a class="headerlink" href="#diatom-legacy-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-diatom.Legacy">
+<span id="diatom-legacy-module"></span><h2>diatom.Legacy module<a class="headerlink" href="#module-diatom.Legacy" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="diatom.Legacy.Quadrupole">
+<code class="sig-prename descclassname">diatom.Legacy.</code><code class="sig-name descname">Quadrupole</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Q</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Legacy.Quadrupole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Legacy Quadrupole moment calculation</p>
+<p>This form of the quadrupole moments is only accurate on the diagonal.
+it comes from doi:10.1103/PhysRev.91.1403, which quotes the quadrupole interaction
+for KBr</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Q</strong> (<em>tuple of floats</em>) – Tuple or list of the nuclear quadrupole moments as (Q1,Q2)</p></li>
+<li><p><strong>I1</strong> (<em>lists of numpy.ndarray</em>) – Angular momentum Vectors</p></li>
+<li><p><strong>I2</strong> (<em>lists of numpy.ndarray</em>) – Angular momentum Vectors</p></li>
+<li><p><strong>N</strong> (<em>lists of numpy.ndarray</em>) – Angular momentum Vectors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Quad (numpy.ndarray) - Quadrupole term</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Legacy.Vary_Beta">
+<code class="sig-prename descclassname">diatom.Legacy.</code><code class="sig-name descname">Vary_Beta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Hams</span></em>, <em class="sig-param"><span class="n">fields0</span></em>, <em class="sig-param"><span class="n">Angles</span></em>, <em class="sig-param"><span class="n">Molecule_pars</span></em>, <em class="sig-param"><span class="n">return_states</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Legacy.Vary_Beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>vary polarisation of laser field</p>
+<p>find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+This function works differently to the applied field ones. Because beta
+changes the matrix elements in the Hamiltonian we cannot simply
+multiply it through. Therefore we have to recalculate the matrix
+elements on each interation. This makes the function slower.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hams</strong> – list or tuple of hamiltonians. Should all be the same size</p></li>
+<li><p><strong>fields0</strong> – initial field conditions, allows for zeeman + Stark effects</p></li>
+<li><p><strong>Angles</strong> – Polarisation angles to iterate over</p></li>
+<li><p><strong>Molecule_pars</strong> – Nmax,I1,I2,a2, arguments to feed to regenerate the anisotropic Stark shift matrix.</p></li>
+<li><p><strong>return_states</strong> – Switch to return EigenStates as well as Eigenenergies</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of Eigenenergies, sorted from smallest to largest along the 0 axis
+states: array of Eigenstates, sorted as in energy.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Legacy.Vary_ElectricDC">
+<code class="sig-prename descclassname">diatom.Legacy.</code><code class="sig-name descname">Vary_ElectricDC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Hams</span></em>, <em class="sig-param"><span class="n">fields0</span></em>, <em class="sig-param"><span class="n">Ez</span></em>, <em class="sig-param"><span class="n">return_states</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Legacy.Vary_ElectricDC" title="Permalink to this definition">¶</a></dt>
+<dd><p>vary electric field DC</p>
+<p>find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+This function works differently to the applied field ones. Because beta
+changes the matrix elements in the Hamiltonian we cannot simply
+multiply it through. Therefore we have to recalculate the matrix
+elements on each interation. This makes the function slower.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hams</strong> – list or tuple of hamiltonians. Should all be the same size</p></li>
+<li><p><strong>fields0</strong> – initial field conditions, allows for zeeman + Stark effects</p></li>
+<li><p><strong>Ez</strong> – Electric fields to iterate over</p></li>
+<li><p><strong>return_states</strong> – Switch to return EigenStates as well as Eigenenergies</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of Eigenenergies, sorted from smallest to largest along the 0 axis
+states:array of Eigenstates, sorted as in energy.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Legacy.Vary_Intensity">
+<code class="sig-prename descclassname">diatom.Legacy.</code><code class="sig-name descname">Vary_Intensity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Hams</span></em>, <em class="sig-param"><span class="n">fields0</span></em>, <em class="sig-param"><span class="n">I_app</span></em>, <em class="sig-param"><span class="n">return_states</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Legacy.Vary_Intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p>vary intensity of off-resonant laser field</p>
+<p>find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+This function works differently to the applied field ones. Because beta
+changes the matrix elements in the Hamiltonian we cannot simply
+multiply it through. Therefore we have to recalculate the matrix
+elements on each interation. This makes the function slower.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hams</strong> – list or tuple of hamiltonians. Should all be the same size</p></li>
+<li><p><strong>fields0</strong> – initial field conditions, allows for zeeman + Stark effects</p></li>
+<li><p><strong>Intensity</strong> – Intensities to iterate over</p></li>
+<li><p><strong>return_states</strong> – Switch to return EigenStates as well as Eigenenergies</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of Eigenenergies, sorted from smallest to largest along the 0 axis
+states:array of Eigenstates, sorted as in energy.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Legacy.Vary_magnetic">
+<code class="sig-prename descclassname">diatom.Legacy.</code><code class="sig-name descname">Vary_magnetic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Hams</span></em>, <em class="sig-param"><span class="n">fields0</span></em>, <em class="sig-param"><span class="n">Bz</span></em>, <em class="sig-param"><span class="n">return_states</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Legacy.Vary_magnetic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vary magnetic field</p>
+<p>find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+This function works differently to the applied field ones. Because beta
+changes the matrix elements in the Hamiltonian we cannot simply
+multiply it through. Therefore we have to recalculate the matrix
+elements on each interation. This makes the function slower.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Hams</strong> – list or tuple of hamiltonians. Should all be the same size</p></li>
+<li><p><strong>fields0</strong> – initial field conditions, allows for zeeman + Stark effects</p></li>
+<li><p><strong>Bz</strong> – magnetic fields to iterate over</p></li>
+<li><p><strong>return_states</strong> – Switch to return EigenStates as well as Eigenenergies</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array of Eigenenergies, sorted from smallest to largest along the 0 axis
+states:array of Eigenstates, sorted as in energy.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="diatom.Legacy.tensor_nuclear">
+<code class="sig-prename descclassname">diatom.Legacy.</code><code class="sig-name descname">tensor_nuclear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">C3</span></em>, <em class="sig-param"><span class="n">I1</span></em>, <em class="sig-param"><span class="n">I2</span></em>, <em class="sig-param"><span class="n">N</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Legacy.tensor_nuclear" title="Permalink to this definition">¶</a></dt>
+<dd><p>The tensor - nuclear spin spin interaction.</p>
+<p>This version uses cartesian angular momentum matrices and is incorrect.
+Correct version has off-diagonal terms in N. this only has the diagonals.
+It is close but only suitable where high-performance requirements replace
+accuracy requirements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C3</strong> (<em>float</em>) – Tensor spin-spin coupling coefficient</p></li>
+<li><p><strong>I1</strong> (<em>lists of numpy.ndarray</em>) – Angular momentum Vectors</p></li>
+<li><p><strong>I2</strong> (<em>lists of numpy.ndarray</em>) – Angular momentum Vectors</p></li>
+<li><p><strong>N</strong> (<em>lists of numpy.ndarray</em>) – Angular momentum Vectors</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tensor spin-spin term</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>H (numpy.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-diatom.Plotting">
 <span id="diatom-plotting-module"></span><h2>diatom.Plotting module<a class="headerlink" href="#module-diatom.Plotting" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="diatom.Plotting.TDM_plot">
-<code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">TDM_plot</code><span class="sig-paren">(</span><em class="sig-param">energies</em>, <em class="sig-param">States</em>, <em class="sig-param">gs</em>, <em class="sig-param">Nmax</em>, <em class="sig-param">I1</em>, <em class="sig-param">I2</em>, <em class="sig-param">TDMs=None</em>, <em class="sig-param">which=None</em>, <em class="sig-param">pm=1</em>, <em class="sig-param">Offset=0</em>, <em class="sig-param">fig=&lt;Figure size 640x480 with 0 Axes&gt;</em>, <em class="sig-param">log=False</em>, <em class="sig-param">minf=None</em>, <em class="sig-param">maxf=None</em>, <em class="sig-param">prefactor=1</em>, <em class="sig-param">col=None</em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.TDM_plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>this function plots a series of energy levels and their transition dipole
-moments from a given ground state.</p>
+<code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">TDM_plot</code><span class="sig-paren">(</span><em class="sig-param">energies</em>, <em class="sig-param">States</em>, <em class="sig-param">gs</em>, <em class="sig-param">Nmax</em>, <em class="sig-param">I1</em>, <em class="sig-param">I2</em>, <em class="sig-param">TDMs=None</em>, <em class="sig-param">pm=1</em>, <em class="sig-param">Offset=0</em>, <em class="sig-param">fig=&lt;Figure size 640x480 with 0 Axes&gt;</em>, <em class="sig-param">log=False</em>, <em class="sig-param">minf=None</em>, <em class="sig-param">maxf=None</em>, <em class="sig-param">prefactor=0.001</em>, <em class="sig-param">col=None</em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.TDM_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a TDM plot</p>
+<p>this function plots a series of energy levels and their transition dipole
+moments from a given ground state. In this version a lot of the plotting style
+is fixed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>energies</strong> (<em>numpy.ndarray</em>) – </p></li>
+<li><p><strong>states</strong> (<em>numpy.ndarray</em>) – ,i]</p></li>
+<li><p><strong>gs</strong> (<em>int</em>) – </p></li>
+<li><p><strong>Nmax</strong> (<em>int</em>) – </p></li>
+<li><p><strong>I1</strong> (<em>float</em>) – </p></li>
+<li><p><strong>I2</strong> (<em>float</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>TDMs (list of numpy.ndarray) - optional precomputed transition dipole moments in [sigma-,pi,sigma+] order
+pm (float) - flag for if the transition increases or decreases N (default = 1)
+Offset (float) - yaxis offset (default = 0)
+fig (matplotlib.pyplot.figure) - figure object to draw on
+log (bool) - use logarithmic scaling for TDM plots
+minf (float) - minimum frequency to show
+maxf (float) - maximum frequency to show
+prefactor (float) - scaling factor for all energies
+col (list) - list of colours for lines (must be at least length 3 )</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Plotting.colorline">
 <code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">colorline</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z=None</em>, <em class="sig-param">cmap=&lt;matplotlib.colors.LinearSegmentedColormap object&gt;</em>, <em class="sig-param">norm=&lt;matplotlib.colors.Normalize object&gt;</em>, <em class="sig-param">linewidth=3</em>, <em class="sig-param">alpha=1.0</em>, <em class="sig-param">legend=False</em>, <em class="sig-param">ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.colorline" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a colored line with coordinates x and y
+<dd><p>Plot a line shaded by an extra value.</p>
+<p>Plot a colored line with coordinates x and y
 Optionally specify colors in the array z
 Optionally specify a colormap, a norm function and a line width</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>list-like</em>) – x and y coordinates to plot</p></li>
+<li><p><strong>y</strong> (<em>list-like</em>) – x and y coordinates to plot</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>kwargs:</dt><dd><p>z (list): Optional third parameter to colour lines by
+cmap (matplotlib.cmap): colour mapping for z
+norm (): Normalisation function for mapping z values to colours
+linewidth (float): width of plotted lines (default =3)
+alpha (float): value of alpha channel (default = 1)
+legend (Bool): display a legend (default = False)
+ax (matplotlib.pyplot.axes): axis object to plot on</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>lc (Collection) - collection of lines</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt id="diatom.Plotting.make_segments">
 <code class="sig-prename descclassname">diatom.Plotting.</code><code class="sig-name descname">make_segments</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#diatom.Plotting.make_segments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create list of line segments from x and y coordinates, in the correct format for LineCollection:
+<dd><p>segment x and y points</p>
+<p>Create list of line segments from x and y coordinates, in the correct format for LineCollection:
 an array of the form   numlines x (points per line) x 2 (x and y) array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy.ndarray -like</em>) – </p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray -like</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>segments (numpy.ndarray) - array of numlines by points per line by 2</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="diatom-test-script-module">
-<h2>diatom.test_script module<a class="headerlink" href="#diatom-test-script-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-diatom">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-diatom" title="Permalink to this headline">¶</a></h2>
@@ -523,11 +1161,9 @@ an array of the form   numlines x (points per line) x 2 (x and y) array</p>
 <li><a class="reference internal" href="#">diatom package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-diatom.Calculate">diatom.Calculate module</a></li>
-<li><a class="reference internal" href="#module-diatom.Fitting">diatom.Fitting module</a></li>
 <li><a class="reference internal" href="#module-diatom.Hamiltonian">diatom.Hamiltonian module</a></li>
-<li><a class="reference internal" href="#diatom-legacy-module">diatom.Legacy module</a></li>
+<li><a class="reference internal" href="#module-diatom.Legacy">diatom.Legacy module</a></li>
 <li><a class="reference internal" href="#module-diatom.Plotting">diatom.Plotting module</a></li>
-<li><a class="reference internal" href="#diatom-test-script-module">diatom.test_script module</a></li>
 <li><a class="reference internal" href="#module-diatom">Module contents</a></li>
 </ul>
 </li>

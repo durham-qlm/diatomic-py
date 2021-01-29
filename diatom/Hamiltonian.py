@@ -9,6 +9,17 @@ import warnings
 This module contains the main code to calculate the hyperfine structure of
 singlet -sigma molecules. In usual circumstances most of the functions within
 are not user-oriented.
+
+Example:
+    Basic usage of this module is for accessing the eigenstates and
+    eigenvalues of the molecule in question. This is most easily done
+    by combining this module with the uses favourite linear algebra module.
+    For instance to find the zero-field hyperfine states of Molecule::
+
+        $ from diatom import Hamiltonian
+        $ from numpy import linalg as la
+        $ H0,Hz,HDC,HAC = Hamiltonian.Build_Hamiltonians(5,Molecule)
+        $ ev,es = la.eigh(H0)
 '''
 
 
@@ -29,12 +40,10 @@ muN = scipy.constants.physical_constants['nuclear magneton'][0]
 bohr = scipy.constants.physical_constants['Bohr radius'][0]
 eps0 = scipy.constants.epsilon_0
 c = scipy.constants.c
-
-
 pi = numpy.pi
 
 DebyeSI = 3.33564e-30
-
+""" Conversion factor from debyes to J/V/m """
 ###############################################################################
 # Bialkali Molecular Constants                                                    #
 ###############################################################################
@@ -65,6 +74,25 @@ RbCs = {    "I1":1.5,
             "a0":2020*4*pi*eps0*bohr**3,
             "a2":1997*4*pi*eps0*bohr**3,
             "Beta":0}
+"""
+Molecular constants for the 87Rb133Cs molecule.
+
+Constants are all in SI units, included are:
+
+* I1, I2 = Nuclear spins
+* d0 - permanent dipole moment
+* Brot - rotational constant
+* Drot - Centrifugal distortion coefficient
+* Q1,Q2 - Nuclear quadrupole moments
+* C1,C2 - Nuclear Spin -rotation coefficients
+* C3 - Tensor Spin-Spin coefficient
+* C4 - Scalar spin-spin coefficient
+* MuN - Rotational magnetic moment
+* Mu1,Mu2 - Nuclear magnetic moments (shielded)
+* a0 - isotropic polarisability of the molecule ( at 1550 nm)
+* a2 - anisotropic polarisability of the molecule ( at 1550 nm)
+* beta - default polarisation angle of a trapping laser
+"""
 
 K41Cs = {   "I1":1.5,
             "I2":3.5,
@@ -83,7 +111,25 @@ K41Cs = {   "I1":1.5,
             "a0":7.783e6*h, #h*Hz/(W/cm^2)
             "a2":0,
             "Beta":0}
+"""
+Molecular constants for the 41K133Cs molecule
 
+Constants are all in SI units, included are:
+
+* I1, I2 = Nuclear spins
+* d0 - permanent dipole moment
+* Brot - rotational constant
+* Drot - Centrifugal distortion coefficient
+* Q1,Q2 - Nuclear quadrupole moments
+* C1,C2 - Nuclear Spin -rotation coefficients
+* C3 - Tensor Spin-Spin coefficient
+* C4 - Scalar spin-spin coefficient
+* MuN - Rotational magnetic moment
+* Mu1,Mu2 - Nuclear magnetic moments (shielded)
+* a0 - isotropic polarisability of the molecule ( at 1550 nm)
+* a2 - anisotropic polarisability of the molecule ( at 1550 nm)
+* beta - default polarisation angle of a trapping laser
+"""
 K40Rb = {   "I1":4,
             "I2":1.5,
             "d0":0.62*DebyeSI,
@@ -101,6 +147,26 @@ K40Rb = {   "I1":4,
             "a0":5.33e-5*1e6*h, #h*Hz/(W/cm^2)
             "a2":6.67e-5*1e6*h,
             "Beta":0}
+
+"""
+Molecular constants for the 40K87Rb molecule
+
+Constants are all in SI units, included are:
+
+* I1, I2 = Nuclear spins
+* d0 - permanent dipole moment
+* Brot - rotational constant
+* Drot - Centrifugal distortion coefficient
+* Q1,Q2 - Nuclear quadrupole moments
+* C1,C2 - Nuclear Spin -rotation coefficients
+* C3 - Tensor Spin-Spin coefficient
+* C4 - Scalar spin-spin coefficient
+* MuN - Rotational magnetic moment
+* Mu1,Mu2 - Nuclear magnetic moments (shielded)
+* a0 - isotropic polarisability of the molecule ( at 1550 nm)
+* a2 - anisotropic polarisability of the molecule ( at 1550 nm)
+* beta - default polarisation angle of a trapping laser
+"""
 ###############################################################################
 # Functions for the calculations to use                                       #
 ###############################################################################
@@ -111,11 +177,12 @@ K40Rb = {   "I1":4,
 def Raising_operator(j):
     ''' Creates the angular momentum raising operator for j
 
-    In the j,mj basis running from max(mj) to min (mj) creates a matrix that represents the operator j+|j,mj> = |j,mj+1>
+    In the j,mj basis running from max(mj) to min (mj) creates a matrix that represents the operator j+\|j,mj> = \|j,mj+1>
 
-    Inputs:
+    Args:
         j (float) : value of the angular momentum
-    Outputs:
+
+    Returns:
         J+ (numpy.ndarray) : Array representing the operator J+, has shape ((2j+1),(2j+1))
 
     '''
@@ -135,9 +202,9 @@ def X_operator(J):
 
         Creates the Cartesian operator Jx for a given J
 
-        input arguments:
+        Args:
             J (float): Magnitude of angular momentum
-        output:
+        Returns:
             Jx (numpy.ndarray) : 2J+1 square numpy array
     '''
     J_plus = Raising_operator(J)
@@ -149,9 +216,9 @@ def Y_operator(J):
 
         Creates the Cartesian operator Jy for a given J
 
-        input arguments:
+        Args:
             J (float): Magnitude of angular momentum
-        output:
+        Returns:
             Jy (numpy.ndarray) : 2J+1 square numpy array
     '''
     J_plus = Raising_operator(J)
@@ -163,9 +230,9 @@ def Z_operator(J):
 
         Creates the Cartesian operator Jz for a given J. This is diagonal in the j,mj basis such that jz|j,mj> = mj|j,mj>
 
-        input arguments:
+        Args:
             J (float): Magnitude of angular momentum
-        output:
+        Returns:
             Jz (numpy.ndarray) : 2J+1 square numpy array
     '''
     J_plus = Raising_operator(J)
@@ -178,10 +245,10 @@ def vector_dot(x,y):
         A function that can do the dot product of a vector of matrices default
         behaviour of numpy.dot does the elementwise product of the matrices.
 
-        input arguments:
+        Args:
             x,y (numpy.ndarray): length-3 Vectors of Angular momentum operators, each element is a JxJ arrays
 
-        output:
+        Returns:
             Z (numpy.ndarray): result of the dot product, JxJ array
     '''
     X_Y = numpy.zeros(x[0].shape,dtype=numpy.complex)
@@ -195,10 +262,10 @@ def Generate_vecs(Nmax,I1,I2):
         Generate the vectors of the angular momentum operators which we need
         to be able to produce the Hamiltonian
 
-        input arguments:
+        Args:
             Nmax (float): maximum rotational level to include in calculations
             I1,I2 (float): Nuclear spins of nuclei 1 and 2
-        output arguments:
+        Returns:
             N_vec,I1_vec,I2_vec (list of numpy.ndarray): length-3 list of (2Nmax+1)*(2I1+1)*(2I2+1) square numpy arrays
     '''
 
@@ -260,11 +327,11 @@ def Wigner_D(l,m,alpha,beta,gamma):
 
     The input angles are the x-z-x euler angles
 
-    Inputs:
+    Args:
         l (int) : order of wigner Matrix
         m (float): first index of Wigner Matrix
         alpha,beta,gamma (float) : x,z,x Euler angles in radians
-    outputs:
+    Returns:
         D (float) : Value of the wigner-D matrix
     '''
     prefactor = numpy.sqrt((4*numpy.pi)/(2*l+1))
@@ -276,11 +343,11 @@ def T2_C(Nmax,I1,I2):
     The irreducible spherical tensors for the spherical harmonics in the
     rotational basis.
 
-    input arguments:
+    Args:
         Nmax (int) : Maximum rotational state to include
         I1,I2 (float) :  The nuclear spins of nucleus 1 and 2
 
-    outputs:
+    Returns:
         T (list of numpy.ndarray) : spherical tensor T^2(C). Each element is a spherical operator
 
     '''
@@ -314,9 +381,9 @@ def T2_C(Nmax,I1,I2):
 def MakeT2(I1,I2):
     ''' Construct the spherical tensor T2 from two cartesian vectors of operators.
 
-    Inputs
+    Args:
         I1,I2 (list of numpy.ndarray) - Length-3 list of cartesian angular momentum operators: the output of makevecs
-    Outputs
+    Returns:
         T (list of numpy.ndarray) - T^2(I1,I2) length-5 list of spherical angular momentum operators
     '''
     T2m2 = 0.5*(numpy.dot(I1[0],I2[0])-1.0j*numpy.dot(I1[0],I2[1])-1.0j*numpy.dot(I1[1],I2[0])-numpy.dot(I1[1],I2[1]))
@@ -334,13 +401,14 @@ def MakeT2(I1,I2):
 def TensorDot(T1,T2):
     ''' Product of two rank-2 spherical tensors T1, T2
 
-     A function to calculate the scalar product of two spherical tensors
+    A function to calculate the scalar product of two spherical tensors
     T1 and T2 are lists or numpy arrays that represent the spherical tensors
     lists are indexed from lowest m to highests
 
-    Input:
+    Args:
         T1,T2 (list of numpy.ndarray) - length-5 list of numpy.ndarray
-    output:
+
+    Returns:
         X (numpy.ndarray) - scalar product of spherical tensors
     '''
     x = numpy.zeros(T1[0].shape,dtype=numpy.complex128)
@@ -361,10 +429,10 @@ def ElectricGradient(Nmax,I1,I2):
     on the rotational states not the nuclear spin states. Returns a spherical
     tensor.
 
-    input arguments are:
+    Args:
         Nmax (int) - Maximum rotational state to include
         I1,I2 (float)- The nuclear spins of nucleus 1 and 2
-    Output:
+    Returns:
         T (list of numpy.ndarray) - length-5 list of numpy.ndarrays
     '''
     shape = sum([2*x+1 for x in range(0,Nmax+1)])
@@ -401,10 +469,10 @@ def QuadMoment(Nmax,I1,I2):
 
     spherical tensor for the nuclear quadrupole moment of both nuclei. Depends
     on the nuclear spin states not the rotational states.
-    input arguments are:
+    Args:
         Nmax (int) - Maximum rotational state to include
         I1,I2 (float) - The nuclear spins of nucleus 1 and 2
-    Output:
+    Returns:
         T (list of numpy.ndarray) - length-5 list of numpy.ndarrays
 
     '''
@@ -459,12 +527,12 @@ def Quadrupole(Q,I1,I2,Nmax):
     spherical tensor algebra. Requires the nuclear quadrupole moments and
     electric field gradients.
 
-    input arguments are:
+    Args:
         Q (tuple of floats) - two-tuple of nuclear electric quadrupole moments in Joules
         Nmax (int) - Maximum rotational state to include
         I1,I2  (float) - The nuclear spins of nucleus 1 and 2
 
-    Outputs:
+    Returns:
         Hquad (numpy.ndarray) - numpy array with shape (2I1+1)*(2I2+1)*sum([(2*x+1) for x in range(Nmax+1)])
     '''
     Q1,Q2 = Q
@@ -485,12 +553,12 @@ def Rotational(N,Brot,Drot):
 
         Matrix is returned in the N,MN basis with MN going from maximum to minimum.
 
-        input arguments:
+        Args:
             N (list of numpy.ndarray) - length 3 list representing the Angular momentum vector for rotation
             Brot(float) - Rotational constant coefficient in joules
             Drot (float) - Centrifugal distortion coefficient in joules
 
-        output arguments:
+        Returns:
             Hrot (numpy.ndarray) - hamiltonian for rotation in the N,MN basis
     '''
     N_squared = vector_dot(N,N)
@@ -502,10 +570,10 @@ def Zeeman(Cz,J):
         Linear Zeeman shift, fixed magnetic field along z so only need the
         last component of the angular momentum vector.
 
-        input arguments:
+        Args:
             Cz (float) - Zeeman Coefficient/magnetic moment
             J (list of numpy.ndarray) - Angular momentum vector
-        outputs:
+        Returns:
             Hz (numpy.ndarray) - Zeeman Hamiltonian
     '''
     Hzeeman = -Cz*J[2]
@@ -516,11 +584,11 @@ def scalar_nuclear(Ci,J1,J2):
 
         Returns the scalar spin-spin term of the HF Hamiltonian
 
-        Input arguments:
+        Args:
             Ci(float) - Scalar spin coupling coefficient
             J1,J2 (list of numpy.ndarray) - Angular momentum vectors
 
-        returns:
+        Returns:
             H (numpy.ndarray) - Hamiltonian for spin-spin interaction
     '''
     return Ci*vector_dot(J1,J2)
@@ -532,12 +600,12 @@ def tensor_nuclear(C3,I1,I2,Nmax):
         This version uses spherical tensors to calculate the correct off-diagonal
         behaviour.
 
-        Inputs:
+        Args:
             C3 (float) - spin-spin coupling constant
             I1,I2 (float) - Cartesian Angular momentum operator Vectors
             Nmax (int) - maximum rotational state to include
 
-        Outputs:
+        Returns:
             Hss (numpy.ndarray) - Hamiltonian for tensor spin-spin interaction
     '''
     #find the value of I1 and I2 with less input arguments
@@ -564,13 +632,13 @@ def DC(Nmax,d0,I1,I2):
         kronecker products to expand it into all of the hyperfine states.
 
 
-        input arguments:
+        Args:
             Nmax(int) -  maximum rotational quantum number to calculate
             d0 (float) - Permanent electric dipole momentum
             I1,I2 (float) - Nuclear spin of nucleus 1,2
 
 
-        returns:
+        Returns:
             H (numpy.ndarray) - DC Stark Hamiltonian in joules
      '''
 
@@ -605,13 +673,13 @@ def AC_iso(Nmax,a0,I1,I2):
         N,MN,N',MN' to build a matrix without hyperfine structure then uses
         kronecker products to expand it into all of the hyperfine states.
 
-        input arguments:
+        Args:
             Nmax (int) - maximum rotational quantum number to calculate (int)
             a0 (float) - isotropic polarisability in joules/ W/m^2
             I1,I2 (float) - Nuclear spin of nucleus 1,2
 
 
-        returns:
+        Returns:
             H (numpy.ndarray) - isotropic AC Stark Hamiltonian
 
      '''
@@ -649,14 +717,14 @@ def AC_aniso(Nmax,a2,Beta,I1,I2):
         N,MN,N',MN' to build a matrix without hyperfine structure then uses
         kronecker products to expand it into all of the hyperfine states.
 
-        input arguments:
+        Args:
 
             Nmax (int) - maximum rotational quantum number to calculate
             a2 (float) - anisotropic polarisability
             Beta (float) - polarisation angle of the laser in Radians
             I1,I2 (float) - Nuclear spin of nucleus 1,2
 
-        returns:
+        Returns:
             H (numpy.ndarray): Hamiltonian in joules
      '''
     I1shape = int(2*I1+1)
@@ -694,11 +762,11 @@ def Hyperfine_Ham(Nmax,I1_mag,I2_mag,Consts):
 
         Wrapper to call all of the functions that are appropriate for the singlet-sigma hyperfine hamiltonian.
 
-        Input arguments:
+        Args:
             Nmax (int) - Maximum rotational level to include
             I1_mag,I2_mag (float) - magnitude of the nuclear spins
             Consts (Dictionary): Dict of molecular constants
-        returns:
+        Returns:
             H0 : Hamiltonian for the hyperfine structure in joules
     '''
     N,I1,I2 = Generate_vecs(Nmax,I1_mag,I2_mag)
@@ -714,13 +782,13 @@ def Zeeman_Ham(Nmax,I1_mag,I2_mag,Consts):
         Calculates the Zeeman effect for a magnetic field on a singlet-sigma molecule.
         There is no electronic term and the magnetic field is fixed to be along the z axis.
 
-        Input arguments:
-        Nmax (int) - Maximum rotational level to include
-        I1_mag,I2_mag (float) - magnitude of the nuclear spins
-        Consts (Dictionary): Dict of molecular constants
+        Args:
+            Nmax (int) - Maximum rotational level to include
+            I1_mag,I2_mag (float) - magnitude of the nuclear spins
+            Consts (Dictionary): Dict of molecular constants
 
-        returns:
-        Hz (numpy.ndarray): Hamiltonian for the zeeman effect
+        Returns:
+            Hz (numpy.ndarray): Hamiltonian for the zeeman effect
     '''
     N,I1,I2 = Generate_vecs(Nmax,I1_mag,I2_mag)
     H = Zeeman(Consts['Mu1'],I1)+Zeeman(Consts['Mu2'],I2)+\
@@ -736,13 +804,13 @@ def Build_Hamiltonians(Nmax,Constants,zeeman=False,EDC=False,AC=False):
         the user doesn't have to rebuild them every time and we can benefit from
         numpy's ability to do distributed multiplcation.
 
-        Input arguments:
+        Args:
             Nmax (int) - Maximum rotational level to include
             I1_mag,I2_mag (float) - magnitude of the nuclear spins
             Constants (Dictionary) - Dict of molecular constants
             zeeman,EDC,AC (Boolean) - Switches for turning off parts of the total Hamiltonian can save significant time on calculations where DC and AC fields are not required due to nested for loops
 
-        returns:
+        Returns:
             H0,Hz,HDC,HAC (numpy.ndarray): Each of the terms in the Hamiltonian.
     '''
     I1 = Constants['I1']

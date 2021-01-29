@@ -1,6 +1,6 @@
-from Hamiltonian import vector_dot
+from diatom.Hamiltonian import vector_dot
 import numpy
-from scipy import linalg.block_diag
+from scipy.linalg import block_diag
 
 '''
 This module contains code that is incorrect beyond the diagonal elements of the
@@ -10,18 +10,18 @@ cicumstances the code in Hamiltonian is better.
 
 
 def tensor_nuclear(C3,I1,I2,N):
-    '''
-        The tensor - nuclear spin spin interaction.
+    ''' The tensor - nuclear spin spin interaction.
 
         This version uses cartesian angular momentum matrices and is incorrect.
         Correct version has off-diagonal terms in N. this only has the diagonals.
         It is close but only suitable where high-performance requirements replace
         accuracy requirements.
 
-        input arguments:
+        Args:
             C3 (float): Tensor spin-spin coupling coefficient
             I1,I2,N (lists of numpy.ndarray): Angular momentum Vectors
-        returns:
+
+        Returns:
             H (numpy.ndarray): Tensor spin-spin term
     '''
     with warnings.catch_warnings():
@@ -63,14 +63,17 @@ def tensor_nuclear(C3,I1,I2,N):
 
 
 def Quadrupole(Q,I1,I2,N):
-    '''
-        from 10.1103/PhysRev.91.1403, which quotes the quadrupole interaction
-         for KBr
-         input arguments:
-            Q (tuple of floats) : Tuple or list of the nuclear quadrupole moments as (Q1,Q2)
+    ''' Legacy Quadrupole moment calculation
 
+        This form of the quadrupole moments is only accurate on the diagonal.
+        it comes from doi:10.1103/PhysRev.91.1403, which quotes the quadrupole interaction
+        for KBr
+
+        Args:
+            Q (tuple of floats) : Tuple or list of the nuclear quadrupole moments as (Q1,Q2)
             I1,I2,N (lists of numpy.ndarray): Angular momentum Vectors
-        returns:
+
+        Returns:
             Quad (numpy.ndarray) - Quadrupole term
     '''
     Q1,Q2 = Q
@@ -127,21 +130,26 @@ def Quadrupole(Q,I1,I2,N):
 # cover most needs
 
 def Vary_magnetic(Hams,fields0,Bz,return_states = False):
+    ''' Vary magnetic field
 
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    This function works differently to the applied field ones. Because beta
+    changes the matrix elements in the Hamiltonian we cannot simply
+    multiply it through. Therefore we have to recalculate the matrix
+    elements on each interation. This makes the function slower.
 
-        input arguments:
+    Args:
         Hams: list or tuple of hamiltonians. Should all be the same size
         fields0: initial field conditions, allows for zeeman + Stark effects
-        Bz: magnetic field to be iterated over
+        Bz: magnetic fields to iterate over
         return_states: Switch to return EigenStates as well as Eigenenergies
 
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
+    Returns:
+        energy:array of Eigenenergies, sorted from smallest to largest along the 0 axis
         states:array of Eigenstates, sorted as in energy.
+
     '''
+
 
     H0,Hz,HDC,HAC = Hams
     E,B,I = fields0
@@ -171,21 +179,26 @@ def Vary_magnetic(Hams,fields0,Bz,return_states = False):
             return EigenValues
 
 def Vary_ElectricDC(Hams,fields0,Ez,return_states = False):
+    ''' vary electric field DC
 
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    This function works differently to the applied field ones. Because beta
+    changes the matrix elements in the Hamiltonian we cannot simply
+    multiply it through. Therefore we have to recalculate the matrix
+    elements on each interation. This makes the function slower.
 
-        input arguments:
+    Args:
         Hams: list or tuple of hamiltonians. Should all be the same size
         fields0: initial field conditions, allows for zeeman + Stark effects
-        Ez: Electric field to be iterated over
+        Ez: Electric fields to iterate over
         return_states: Switch to return EigenStates as well as Eigenenergies
 
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
+    Returns:
+        energy:array of Eigenenergies, sorted from smallest to largest along the 0 axis
         states:array of Eigenstates, sorted as in energy.
+
     '''
+
     E,B,I = fields0
     H0,Hz,HDC,HAC = Hams
     EigenValues = numpy.zeros((H0.shape[0],len(Ez)))
@@ -216,20 +229,26 @@ def Vary_ElectricDC(Hams,fields0,Ez,return_states = False):
             return EigenValues
 
 def Vary_Intensity(Hams,fields0,I_app,return_states = False):
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    ''' vary intensity of off-resonant laser field
 
-        input arguments:
+    find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    This function works differently to the applied field ones. Because beta
+    changes the matrix elements in the Hamiltonian we cannot simply
+    multiply it through. Therefore we have to recalculate the matrix
+    elements on each interation. This makes the function slower.
+
+    Args:
         Hams: list or tuple of hamiltonians. Should all be the same size
         fields0: initial field conditions, allows for zeeman + Stark effects
-        I_app: Laser
+        Intensity: Intensities to iterate over
         return_states: Switch to return EigenStates as well as Eigenenergies
 
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
+    Returns:
+        energy:array of Eigenenergies, sorted from smallest to largest along the 0 axis
         states:array of Eigenstates, sorted as in energy.
+
     '''
+
 
     H0,Hz,HDC,HAC = Hams
     E,B,I = fields0
@@ -262,27 +281,25 @@ def Vary_Intensity(Hams,fields0,I_app,return_states = False):
                 return EigenValues
 
 def Vary_Beta(Hams,fields0,Angles,Molecule_pars,return_states = False):
-    '''
-        find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
-        This function works differently to the applied field ones. Because beta
-        changes the matrix elements in the Hamiltonian we cannot simply
-        multiply it through. Therefore we have to recalculate the matrix
-        elements on each interation. This makes the function slower.
+    ''' vary polarisation of laser field
 
-        input arguments:
+    find Eigenvalues (and optionally Eigenstates) of the total Hamiltonian
+    This function works differently to the applied field ones. Because beta
+    changes the matrix elements in the Hamiltonian we cannot simply
+    multiply it through. Therefore we have to recalculate the matrix
+    elements on each interation. This makes the function slower.
+
+    Args:
         Hams: list or tuple of hamiltonians. Should all be the same size
         fields0: initial field conditions, allows for zeeman + Stark effects
         Angles: Polarisation angles to iterate over
-
-        Molecule_pars: Nmax,I1,I2,a2, arguments to feed to regenerate the
-                        anisotropic Stark shift matrix.
-
+        Molecule_pars: Nmax,I1,I2,a2, arguments to feed to regenerate the anisotropic Stark shift matrix.
         return_states: Switch to return EigenStates as well as Eigenenergies
 
-        returns:
-        energy:array of Eigenenergies, sorted from smallest to largest along
-               the 0 axis
-        states:array of Eigenstates, sorted as in energy.
+    Returns:
+        energy: array of Eigenenergies, sorted from smallest to largest along the 0 axis
+        states: array of Eigenstates, sorted as in energy.
+
     '''
 
     Nmax,I1,I2,a2 = Molecule_pars

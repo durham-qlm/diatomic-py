@@ -15,10 +15,10 @@ def make_segments(x, y):
     Create list of line segments from x and y coordinates, in the correct format for LineCollection:
     an array of the form   numlines x (points per line) x 2 (x and y) array
 
-    inputs:
+    Args:
         x,y (numpy.ndarray -like ) - points on lines
 
-    returns:
+    Returns:
         segments (numpy.ndarray) - array of numlines by points per line by 2
 
     '''
@@ -38,8 +38,9 @@ def colorline(x, y, z=None, cmap=pyplot.get_cmap('copper'),
     Optionally specify colors in the array z
     Optionally specify a colormap, a norm function and a line width
 
-    inputs:
+    Args:
         x,y (list-like): x and y coordinates to plot
+
     kwargs:
         z (list): Optional third parameter to colour lines by
         cmap (matplotlib.cmap): colour mapping for z
@@ -48,8 +49,10 @@ def colorline(x, y, z=None, cmap=pyplot.get_cmap('copper'),
         alpha (float): value of alpha channel (default = 1)
         legend (Bool): display a legend (default = False)
         ax (matplotlib.pyplot.axes): axis object to plot on
-    returns:
+
+    Returns:
         lc (Collection) - collection of lines
+        
     '''
     if ax == None:
         ax = pyplot.gca()
@@ -82,7 +85,7 @@ def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
     moments from a given ground state. In this version a lot of the plotting style
     is fixed.
 
-    inputs
+    Args:
         energies (numpy.ndarray) - array of energy levels
         states (numpy.ndarray) - array of states corresponding to energies such that E[i] -> States[:,i]
         gs (int) - index for ground state of interest

@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
 Welcome to Diatomic-py's documentation!
 =======================================
 Diatomic-py is a python module for computing the interaction between the hyperfine structure of a diatomic molecule and external fields.
@@ -10,35 +11,49 @@ Diatomic-py is a python module for computing the interaction between the hyperfi
 Features
 --------
 
-Diatomic-py is a very flexible program, and can currently perform the following calculations for singlet-sigma ground states
- *AC and DC Stark maps
- *Breit-Rabi diagrams
- *Hyperfine state compositions
+Diatomic-py is a very flexible program, and can currently perform the following calculations for singlet-sigma ground states:
 
+ * AC and DC Stark maps
+ * Breit-Rabi diagrams
+ * Hyperfine state compositions
+
+Through fundamental representations of the hyperfine structure many more effects can be observed by combining diatomic-py with numpy and scipy.
+
+Coming Soon
+-----------
+
+ * Plotting functionality
+ * Fitting of experimental data
+ * Doublet-sigma molecules
 
 Installation
 ------------
 Install diatomic-py by downloading the .whl file from GitHub and running:
-    pip install diatomic-py.whl
+    ``pip install diatomic-py.whl``
 
 on windows use:
-    python -m pip install diatomic-py.whl
+    ``python -m pip install diatomic-py.whl``
 
 Usage
 -----
 
 Typical usage of this module requires the user-facing Calculate module.
-    from diatom import Calculate
+    ``from diatom import Calculate``
 
-An example calculation is shown in the ipython notebook.
+An example calculation is shown in the ipython notebook on `GitHub`_.
 
+.. _GitHub: https://github.com/JakeBlackmore/Diatomic-Py/blob/master/Example%20Scripts/Example%20Calculations.ipynb
 
-Indices and tables
-==================
+Access to all of the individual terms is available through the Hamiltonian module
+    ``from diatom import Hamiltonian``
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Full descriptions of all functions can be found using the links below:
+
+.. toctree::
+   :maxdepth: 2
+
+   source/diatom
+
 
 License
 -------

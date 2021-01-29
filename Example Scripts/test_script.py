@@ -1,7 +1,9 @@
-from Hamiltonian import *
-from Calculate import *
+from diatom.Hamiltonian import *
+from diatom.Calculate import *
 from matplotlib import pyplot
 import os
+import diatom.Legacy
+
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 

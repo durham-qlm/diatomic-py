@@ -13,7 +13,8 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="diatom package" href="source/diatom.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -24,6 +25,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="source/diatom.html" title="diatom package"
+             accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Diatomic-py 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Welcome to Diatomic-py’s documentation!</a></li> 
       </ul>
@@ -39,38 +43,61 @@
 <p>Diatomic-py is a python module for computing the interaction between the hyperfine structure of a diatomic molecule and external fields.</p>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt>Diatomic-py is a very flexible program, and can currently perform the following calculations for singlet-sigma ground states</dt><dd><p><a href="#id1"><span class="problematic" id="id2">*</span></a>AC and DC Stark maps
-<a href="#id3"><span class="problematic" id="id4">*</span></a>Breit-Rabi diagrams
-<a href="#id5"><span class="problematic" id="id6">*</span></a>Hyperfine state compositions</p>
-</dd>
-</dl>
+<p>Diatomic-py is a very flexible program, and can currently perform the following calculations for singlet-sigma ground states:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>AC and DC Stark maps</p></li>
+<li><p>Breit-Rabi diagrams</p></li>
+<li><p>Hyperfine state compositions</p></li>
+</ul>
+</div></blockquote>
+<p>Through fundamental representations of the hyperfine structure many more effects can be observed by combining diatomic-py with numpy and scipy.</p>
+</div>
+<div class="section" id="coming-soon">
+<h2>Coming Soon<a class="headerlink" href="#coming-soon" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Plotting functionality</p></li>
+<li><p>Fitting of experimental data</p></li>
+<li><p>Doublet-sigma molecules</p></li>
+</ul>
+</div></blockquote>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>Install diatomic-py by downloading the .whl file from GitHub and running:</dt><dd><p>pip install diatomic-py.whl</p>
+<dt>Install diatomic-py by downloading the .whl file from GitHub and running:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">diatomic-py.whl</span></code></p>
 </dd>
-<dt>on windows use:</dt><dd><p>python -m pip install diatomic-py.whl</p>
+<dt>on windows use:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">diatomic-py.whl</span></code></p>
 </dd>
 </dl>
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>Typical usage of this module requires the user-facing Calculate module.</dt><dd><p>from diatom import Calculate</p>
+<dt>Typical usage of this module requires the user-facing Calculate module.</dt><dd><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">diatom</span> <span class="pre">import</span> <span class="pre">Calculate</span></code></p>
 </dd>
 </dl>
-<p>An example calculation is shown in the ipython notebook.</p>
-</div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<p>An example calculation is shown in the ipython notebook on <a class="reference external" href="https://github.com/JakeBlackmore/Diatomic-Py/blob/master/Example%20Scripts/Example%20Calculations.ipynb">GitHub</a>.</p>
+<dl class="simple">
+<dt>Access to all of the individual terms is available through the Hamiltonian module</dt><dd><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">diatom</span> <span class="pre">import</span> <span class="pre">Hamiltonian</span></code></p>
+</dd>
+</dl>
+<p>Full descriptions of all functions can be found using the links below:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source/diatom.html">diatom package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/diatom.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/diatom.html#module-diatom.Calculate">diatom.Calculate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/diatom.html#module-diatom.Hamiltonian">diatom.Hamiltonian module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/diatom.html#module-diatom.Legacy">diatom.Legacy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/diatom.html#module-diatom.Plotting">diatom.Plotting module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/diatom.html#module-diatom">Module contents</a></li>
 </ul>
+</li>
+</ul>
+</div>
+</div>
 <div class="section" id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
 <p>Diatomic-py is licensed under the 3-Clause BSD License</p>
@@ -98,11 +125,9 @@
   <ul>
 <li><a class="reference internal" href="#">Welcome to Diatomic-py’s documentation!</a><ul>
 <li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#coming-soon">Coming Soon</a></li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a><ul>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#credits">Credits</a></li>
 <li><a class="reference internal" href="#contribute">Contribute</a></li>
@@ -110,6 +135,9 @@
 </li>
 </ul>
 
+  <h4>Next topic</h4>
+  <p class="topless"><a href="source/diatom.html"
+                        title="next chapter">diatom package</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -140,6 +168,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="source/diatom.html" title="diatom package"
+             >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">Diatomic-py 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Welcome to Diatomic-py’s documentation!</a></li> 
       </ul>

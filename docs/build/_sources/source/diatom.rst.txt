@@ -12,14 +12,6 @@ diatom.Calculate module
    :undoc-members:
    :show-inheritance:
 
-diatom.Fitting module
----------------------
-
-.. automodule:: diatom.Fitting
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 diatom.Hamiltonian module
 -------------------------
 
@@ -40,14 +32,6 @@ diatom.Plotting module
 ----------------------
 
 .. automodule:: diatom.Plotting
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-diatom.test\_script module
---------------------------
-
-.. automodule:: diatom.test_script
    :members:
    :undoc-members:
    :show-inheritance:

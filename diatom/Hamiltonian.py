@@ -128,10 +128,10 @@ def vector_dot(x,y):
         Returns:
             Z (numpy.ndarray): result of the dot product, JxJ array
     '''
-    X_Y = numpy.zeros(x[0].shape,dtype=numpy.complex)
+    x_y = numpy.zeros(x[0].shape,dtype=numpy.complex)
     for i in range(x.shape[0]):
-        X_Y += numpy.dot(x[i],y[i])
-    return X_Y
+        x_y += numpy.dot(x[i],y[i])
+    return x_y
 
 def generate_vecs(Nmax,I1,I2):
     ''' Build N, I1, I2 angular momentum vectors

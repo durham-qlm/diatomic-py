@@ -1,9 +1,8 @@
 import numpy
-from sympy.physics.wigner import wigner_3j,wigner_9j
-from scipy.linalg import block_diag,eig,eigvals
+from sympy.physics.wigner import wigner_3j
+from scipy.linalg import block_diag
 import scipy.constants
 from scipy.special import sph_harm
-import warnings
 
 '''
 This module contains the main code to calculate the hyperfine structure of
@@ -44,129 +43,7 @@ pi = numpy.pi
 
 DebyeSI = 3.33564e-30
 """ Conversion factor from debyes to J/V/m """
-###############################################################################
-# Bialkali Molecular Constants                                                    #
-###############################################################################
 
-#Constants are from
-# https://doi.org/10.1103/PhysRevA.96.042506
-#https://doi.org/10.1103/PhysRevA.78.033434
-# and https://arxiv.org/pdf/1707.02168.pdf
-
-# RbCs Constants are from https://doi.org/10.1103/PhysRevA.94.041403
-# Polarisabilities are for 1064 nm
-
-RbCs = {    "I1":1.5,
-            "I2":3.5,
-            "d0":1.225*DebyeSI,
-            "binding":114268135.25e6*h,
-            "Brot":490.173994326310e6*h,
-            "Drot":207.3*h,
-            "Q1":-809.29e3*h,
-            "Q2":59.98e3*h,
-            "C1":98.4*h,
-            "C2":194.2*h,
-            "C3":192.4*h,
-            "C4":19.0189557e3*h,
-            "MuN":0.0062*muN,
-            "Mu1":1.8295*muN,
-            "Mu2":0.7331*muN,
-            "a0":2020*4*pi*eps0*bohr**3,
-            "a2":1997*4*pi*eps0*bohr**3,
-            "Beta":0}
-"""
-Molecular constants for the 87Rb133Cs molecule.
-
-Constants are all in SI units, included are:
-
-* I1, I2 = Nuclear spins
-* d0 - permanent dipole moment
-* Brot - rotational constant
-* Drot - Centrifugal distortion coefficient
-* Q1,Q2 - Nuclear quadrupole moments
-* C1,C2 - Nuclear Spin -rotation coefficients
-* C3 - Tensor Spin-Spin coefficient
-* C4 - Scalar spin-spin coefficient
-* MuN - Rotational magnetic moment
-* Mu1,Mu2 - Nuclear magnetic moments (shielded)
-* a0 - isotropic polarisability of the molecule ( at 1550 nm)
-* a2 - anisotropic polarisability of the molecule ( at 1550 nm)
-* beta - default polarisation angle of a trapping laser
-"""
-
-K41Cs = {   "I1":1.5,
-            "I2":3.5,
-            "d0":1.84*DebyeSI,
-            "Brot":880.326e6*h,
-            "Drot":0*h,
-            "Q1":-0.221e6*h,
-            "Q2":0.075e6*h,
-            "C1":4.5*h,
-            "C2":370.8*h,
-            "C3":9.9*h,
-            "C4":628*h,
-            "MuN":0.0*muN,
-            "Mu1":0.143*(1-1340.7e-6)*muN,
-            "Mu2":0.738*(1-6337.1e-6)*muN,
-            "a0":7.783e6*h, #h*Hz/(W/cm^2)
-            "a2":0,
-            "Beta":0}
-"""
-Molecular constants for the 41K133Cs molecule
-
-Constants are all in SI units, included are:
-
-* I1, I2 = Nuclear spins
-* d0 - permanent dipole moment
-* Brot - rotational constant
-* Drot - Centrifugal distortion coefficient
-* Q1,Q2 - Nuclear quadrupole moments
-* C1,C2 - Nuclear Spin -rotation coefficients
-* C3 - Tensor Spin-Spin coefficient
-* C4 - Scalar spin-spin coefficient
-* MuN - Rotational magnetic moment
-* Mu1,Mu2 - Nuclear magnetic moments (shielded)
-* a0 - isotropic polarisability of the molecule ( at 1550 nm)
-* a2 - anisotropic polarisability of the molecule ( at 1550 nm)
-* beta - default polarisation angle of a trapping laser
-"""
-K40Rb = {   "I1":4,
-            "I2":1.5,
-            "d0":0.62*DebyeSI,
-            "Brot":1113.4e6*h,
-            "Drot":0*h,
-            "Q1":0.311e6*h,
-            "Q2":-1.483e6*h,
-            "C1":-24.1*h,
-            "C2":419.5*h,
-            "C3":-48.2*h,
-            "C4":-2028.8*h,
-            "MuN":0.0140*muN,
-            "Mu1":-0.324*(1-1321e-6)*muN,
-            "Mu2":1.834*(1-3469e-6)*muN,
-            "a0":5.33e-5*1e6*h, #h*Hz/(W/cm^2)
-            "a2":6.67e-5*1e6*h,
-            "Beta":0}
-
-"""
-Molecular constants for the 40K87Rb molecule
-
-Constants are all in SI units, included are:
-
-* I1, I2 = Nuclear spins
-* d0 - permanent dipole moment
-* Brot - rotational constant
-* Drot - Centrifugal distortion coefficient
-* Q1,Q2 - Nuclear quadrupole moments
-* C1,C2 - Nuclear Spin -rotation coefficients
-* C3 - Tensor Spin-Spin coefficient
-* C4 - Scalar spin-spin coefficient
-* MuN - Rotational magnetic moment
-* Mu1,Mu2 - Nuclear magnetic moments (shielded)
-* a0 - isotropic polarisability of the molecule ( at 1550 nm)
-* a2 - anisotropic polarisability of the molecule ( at 1550 nm)
-* beta - default polarisation angle of a trapping laser
-"""
 ###############################################################################
 # Functions for the calculations to use                                       #
 ###############################################################################
@@ -174,7 +51,7 @@ Constants are all in SI units, included are:
 #first functions are mathematical and used to generate the structures that we
 #will need to use
 
-def Raising_operator(j):
+def raising_operator(j):
     ''' Creates the angular momentum raising operator for j
 
     In the j,mj basis running from max(mj) to min (mj) creates a matrix that represents the operator j+\|j,mj> = \|j,mj+1>
@@ -197,7 +74,7 @@ def Raising_operator(j):
 # for the source of these definitions see any good QM textbook e.g.
 # Bransden & Joachain (or wikipedia)
 
-def X_operator(J):
+def x_operator(J):
     ''' operator for X component of J
 
         Creates the Cartesian operator Jx for a given J
@@ -207,11 +84,11 @@ def X_operator(J):
         Returns:
             Jx (numpy.ndarray) : 2J+1 square numpy array
     '''
-    J_plus = Raising_operator(J)
+    J_plus = raising_operator(J)
     J_minus = numpy.transpose(J_plus)
     return 0.5*(J_plus+J_minus)
 
-def Y_operator(J):
+def y_operator(J):
     ''' operator for Y component of J
 
         Creates the Cartesian operator Jy for a given J
@@ -221,11 +98,11 @@ def Y_operator(J):
         Returns:
             Jy (numpy.ndarray) : 2J+1 square numpy array
     '''
-    J_plus = Raising_operator(J)
+    J_plus = raising_operator(J)
     J_minus = numpy.transpose(J_plus)
     return 0.5j*(J_minus - J_plus)
 
-def Z_operator(J):
+def z_operator(J):
     ''' operator for Z component of J
 
         Creates the Cartesian operator Jz for a given J. This is diagonal in the j,mj basis such that jz|j,mj> = mj|j,mj>
@@ -235,7 +112,7 @@ def Z_operator(J):
         Returns:
             Jz (numpy.ndarray) : 2J+1 square numpy array
     '''
-    J_plus = Raising_operator(J)
+    J_plus = raising_operator(J)
     J_minus = numpy.transpose(J_plus)
     return 0.5*(numpy.dot(J_plus,J_minus)-numpy.dot(J_minus,J_plus))
 
@@ -256,7 +133,7 @@ def vector_dot(x,y):
         X_Y += numpy.dot(x[i],y[i])
     return X_Y
 
-def Generate_vecs(Nmax,I1,I2):
+def generate_vecs(Nmax,I1,I2):
     ''' Build N, I1, I2 angular momentum vectors
 
         Generate the vectors of the angular momentum operators which we need
@@ -278,9 +155,9 @@ def Generate_vecs(Nmax,I1,I2):
     Nz= numpy.array([[]])
 
     for n in range(0,Nmax+1):
-        Nx = block_diag(Nx,X_operator(n))
-        Ny = block_diag(Ny,Y_operator(n))
-        Nz = block_diag(Nz,Z_operator(n))
+        Nx = block_diag(Nx,x_operator(n))
+        Ny = block_diag(Ny,y_operator(n))
+        Nz = block_diag(Nz,z_operator(n))
 
     #remove the first element of the N vectors, which are empty
     Nx = Nx[1:,:]
@@ -302,22 +179,22 @@ def Generate_vecs(Nmax,I1,I2):
 
     # we also have to repeat for the nuclear spins
     I1_vec = numpy.array([numpy.kron(numpy.identity(shapeN),
-                        numpy.kron(X_operator(I1),numpy.identity(shape2))),
+                        numpy.kron(x_operator(I1),numpy.identity(shape2))),
                         numpy.kron(numpy.identity(shapeN),
-                        numpy.kron(Y_operator(I1),numpy.identity(shape2))),
+                        numpy.kron(y_operator(I1),numpy.identity(shape2))),
                         numpy.kron(numpy.identity(shapeN),
-                        numpy.kron(Z_operator(I1),numpy.identity(shape2)))])
+                        numpy.kron(z_operator(I1),numpy.identity(shape2)))])
 
     I2_vec = numpy.array([numpy.kron(numpy.identity(shapeN),
-                        numpy.kron(numpy.identity(shape1),X_operator(I2))),
+                        numpy.kron(numpy.identity(shape1),x_operator(I2))),
                         numpy.kron(numpy.identity(shapeN),
-                        numpy.kron(numpy.identity(shape1),Y_operator(I2))),
+                        numpy.kron(numpy.identity(shape1),y_operator(I2))),
                         numpy.kron(numpy.identity(shapeN),
-                        numpy.kron(numpy.identity(shape1),Z_operator(I2)))])
+                        numpy.kron(numpy.identity(shape1),z_operator(I2)))])
 
     return N_vec,I1_vec,I2_vec
 
-def Wigner_D(l,m,alpha,beta,gamma):
+def wigner_D(l,m,alpha,beta,gamma):
     ''' The Wigner D matrix with labels l and m.
 
     Calculates the Wigner D Matrix for the given Alpha,beta,gamma in radians.
@@ -378,7 +255,7 @@ def T2_C(Nmax,I1,I2):
         T[i] = numpy.kron(T[i],Identity)
     return T
 
-def MakeT2(I1,I2):
+def makeT2(I1,I2):
     ''' Construct the spherical tensor T2 from two cartesian vectors of operators.
 
     Args:
@@ -398,7 +275,7 @@ def MakeT2(I1,I2):
 
     return T
 
-def TensorDot(T1,T2):
+def tensor_dot(T1,T2):
     ''' Product of two rank-2 spherical tensors T1, T2
 
     A function to calculate the scalar product of two spherical tensors
@@ -422,7 +299,7 @@ def TensorDot(T1,T2):
 # what is doing what.
 
 
-def ElectricGradient(Nmax,I1,I2):
+def electric_gradient(Nmax,I1,I2):
     '''Calculate electric field gradient at the nucleus.
 
     spherical tensor for the electric field gradient at nucleus i. Depends
@@ -464,7 +341,7 @@ def ElectricGradient(Nmax,I1,I2):
         T[i] = numpy.kron(T[i],Identity)
     return T
 
-def QuadMoment(Nmax,I1,I2):
+def quad_moment(Nmax,I1,I2):
     ''' Calculate the nuclear electric quadrupole moments of nuclei 1 and 2.
 
     spherical tensor for the nuclear quadrupole moment of both nuclei. Depends
@@ -520,7 +397,7 @@ def QuadMoment(Nmax,I1,I2):
         T2[i] = numpy.kron(IdentityN,numpy.kron(Identity1,T2[i]))
     return T1,T2
 
-def Quadrupole(Q,I1,I2,Nmax):
+def quadrupole(Q,I1,I2,Nmax):
     ''' Calculate Hquad, the nuclear electric quadrupole interaction energy
 
     Calculates the Quadrupole terms for the hyperfine Hamiltonian using
@@ -537,15 +414,15 @@ def Quadrupole(Q,I1,I2,Nmax):
     '''
     Q1,Q2 = Q
 
-    TdE = ElectricGradient(Nmax,I1,I2)
-    Tq1,Tq2 = QuadMoment(Nmax,I1,I2)
+    TdE = electric_gradient(Nmax,I1,I2)
+    Tq1,Tq2 = quad_moment(Nmax,I1,I2)
 
-    Hq = Q1*TensorDot(Tq1,TdE)+Q2*TensorDot(Tq2,TdE)
+    Hq = Q1*tensor_dot(Tq1,TdE)+Q2*tensor_dot(Tq2,TdE) 
 
     return Hq/4
 
 
-def Rotational(N,Brot,Drot):
+def rotational(N,Brot,Drot):
     ''' Rigid rotor rotational structure
 
         Generates the hyperfine-free hamiltonian for the rotational levels of
@@ -564,7 +441,7 @@ def Rotational(N,Brot,Drot):
     N_squared = vector_dot(N,N)
     return Brot*N_squared-Drot*N_squared*N_squared
 
-def Zeeman(Cz,J):
+def zeeman(Cz,J):
     '''Calculate the Zeeman effect for a magnetic field along z
 
         Linear Zeeman shift, fixed magnetic field along z so only need the
@@ -614,13 +491,13 @@ def tensor_nuclear(C3,I1,I2,Nmax):
 
     #steps for maths, creates the spherical tensors
     T1 = T2_C(Nmax,I1_val,I2_val)
-    T2 = MakeT2(I1,I2)
+    T2 = makeT2(I1,I2)
     #return final Hamiltonian
-    tensorss = numpy.sqrt(6)*C3*TensorDot(T1,T2)
+    tensorss = numpy.sqrt(6)*C3*tensor_dot(T1,T2)
 
     return tensorss
 
-def DC(Nmax,d0,I1,I2):
+def dc(Nmax,d0,I1,I2):
     ''' calculate HDC for a diatomic molecule
 
         Generates the effect of the dc Stark shift for a rigid-rotor like
@@ -662,7 +539,7 @@ def DC(Nmax,d0,I1,I2):
     return (numpy.kron(HDC,numpy.kron(numpy.identity(I1shape),
             numpy.identity(I2shape))))
 
-def AC_iso(Nmax,a0,I1,I2):
+def ac_iso(Nmax,a0,I1,I2):
     ''' Calculate isotropic Stark shifts
 
         Generates the effect of the isotropic AC Stark shift for a rigid-rotor
@@ -706,7 +583,7 @@ def AC_iso(Nmax,a0,I1,I2):
     return (numpy.kron(HAC,numpy.kron(numpy.identity(I1shape),
                                                     numpy.identity(I2shape))))
 
-def AC_aniso(Nmax,a2,Beta,I1,I2):
+def ac_aniso(Nmax,a2,Beta,I1,I2):
     ''' Calculate anisotropic ac stark shift.
 
         Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
@@ -738,7 +615,7 @@ def AC_aniso(Nmax,a2,Beta,I1,I2):
             for N2 in range(0,Nmax+1):
                 for M2 in range(N2,-(N2+1),-1):
                     M = M2-M1
-                    HAC[i,j]= -a2*(Wigner_D(2,M,0,Beta,0)*(-1)**M2*\
+                    HAC[i,j]= -a2*(wigner_D(2,M,0,Beta,0)*(-1)**M2*\
                                 numpy.sqrt((2*N1+1)*(2*N2+1))*\
                                 wigner_3j(N2,2,N1,0,0,0)*\
                                 wigner_3j(N2,2,N1,-M2,M,M1))
@@ -757,7 +634,7 @@ def AC_aniso(Nmax,a2,Beta,I1,I2):
 #Hamiltonians where necessary.
 
 
-def Hyperfine_Ham(Nmax,I1_mag,I2_mag,Consts):
+def hyperfine_ham(Nmax,I1_mag,I2_mag,consts):
     '''Calculate the field-free Hyperfine hamiltonian
 
         Wrapper to call all of the functions that are appropriate for the singlet-sigma hyperfine hamiltonian.
@@ -769,14 +646,14 @@ def Hyperfine_Ham(Nmax,I1_mag,I2_mag,Consts):
         Returns:
             H0 : Hamiltonian for the hyperfine structure in joules
     '''
-    N,I1,I2 = Generate_vecs(Nmax,I1_mag,I2_mag)
-    H = Rotational(N,Consts['Brot'],Consts['Drot'])+\
-    scalar_nuclear(Consts['C1'],N,I1)+scalar_nuclear(Consts['C2'],N,I2)+\
-    scalar_nuclear(Consts['C4'],I1,I2)+tensor_nuclear(Consts['C3'],I1,I2,Nmax)+\
-    Quadrupole((Consts['Q1'],Consts['Q2']),I1_mag,I2_mag,Nmax)
+    N,I1,I2 = generate_vecs(Nmax,I1_mag,I2_mag)
+    H = rotational(N,consts['Brot'],consts['Drot'])+\
+    scalar_nuclear(consts['C1'],N,I1)+scalar_nuclear(consts['C2'],N,I2)+\
+    scalar_nuclear(consts['C4'],I1,I2)+tensor_nuclear(consts['C3'],I1,I2,Nmax)+\
+    quadrupole((consts['Q1'],consts['Q2']),I1_mag,I2_mag,Nmax)
     return H
 
-def Zeeman_Ham(Nmax,I1_mag,I2_mag,Consts):
+def zeeman_ham(Nmax,I1_mag,I2_mag,consts):
     '''Assembles the Zeeman term and generates operator vectors
 
         Calculates the Zeeman effect for a magnetic field on a singlet-sigma molecule.
@@ -790,92 +667,48 @@ def Zeeman_Ham(Nmax,I1_mag,I2_mag,Consts):
         Returns:
             Hz (numpy.ndarray): Hamiltonian for the zeeman effect
     '''
-    N,I1,I2 = Generate_vecs(Nmax,I1_mag,I2_mag)
-    H = Zeeman(Consts['Mu1'],I1)+Zeeman(Consts['Mu2'],I2)+\
-                Zeeman(Consts['MuN'],N)
+    N,I1,I2 = generate_vecs(Nmax,I1_mag,I2_mag)
+    H = zeeman(consts['Mu1'],I1)+zeeman(consts['Mu2'],I2)+\
+                zeeman(consts['MuN'],N)
     return H
+
+
+
 # This is the main build function and one that the user will actually have to
 # use.
-
-def Build_Hamiltonians(Nmax,Constants,zeeman=False,EDC=False,AC=False):
+def build_hamiltonians(Nmax,constants,zeeman=False,Edc=False,ac=False):
     ''' Return the hyperfine hamiltonian.
 
-        This function builds the hamiltonian matrices for evalutation so that
+        This function builds the hamiltonian matrices for evaluation so that
         the user doesn't have to rebuild them every time and we can benefit from
-        numpy's ability to do distributed multiplcation.
+        numpy's ability to do distributed multiplication.
 
         Args:
             Nmax (int) - Maximum rotational level to include
             I1_mag,I2_mag (float) - magnitude of the nuclear spins
             Constants (Dictionary) - Dict of molecular constants
-            zeeman,EDC,AC (Boolean) - Switches for turning off parts of the total Hamiltonian can save significant time on calculations where DC and AC fields are not required due to nested for loops
+            zeeman,EDC,AC (Boolean) - Switches for turning off parts of the total Hamiltonian 
+            can save significant time on calculations where DC and AC fields are not required 
+            due to nested for loops
 
         Returns:
             H0,Hz,HDC,HAC (numpy.ndarray): Each of the terms in the Hamiltonian.
     '''
-    I1 = Constants['I1']
-    I2 = Constants['I2']
+    I1 = constants['I1']
+    I2 = constants['I2']
 
-    H0 = Hyperfine_Ham(Nmax,I1,I2,Constants)
+    H0 = hyperfine_ham(Nmax,I1,I2,constants)
     if zeeman:
-        Hz = Zeeman_Ham(Nmax,I1,I2,Constants)
+        Hz = zeeman_ham(Nmax,I1,I2,constants)
     else:
         Hz =0.
-    if EDC:
-        HDC = DC(Nmax,Constants['d0'],I1,I2)
+    if Edc:
+        Hdc = dc(Nmax,constants['d0'],I1,I2)
     else:
-        HDC =0.
-    if AC:
-        HAC = (1./(2*eps0*c))*(AC_iso(Nmax,Constants['a0'],I1,I2)+\
-        AC_aniso(Nmax,Constants['a2'],Constants['Beta'],I1,I2))
+        Hdc =0.
+    if ac:
+        Hac = (1./(2*eps0*c))*(ac_iso(Nmax,constants['a0'],I1,I2)+\
+        ac_aniso(Nmax,constants['a2'],constants['Beta'],I1,I2))
     else:
-        HAC =0.
-    return H0,Hz,HDC,HAC
-
-
-if __name__=="__main__":
-
-    #This code only executes if the module is directly executed so acts as a
-    #simple test.
-
-    import matplotlib.pyplot as pyplot
-    import scipy.constants
-    import time
-    ''' My test is building a zeeman structure plot for N<= 5 takes ~20 mins'''
-    B = 0
-    I = 0
-    E = 0
-
-    h = scipy.constants.h
-    muN = scipy.constants.physical_constants['nuclear magneton'][0]
-    bohr = scipy.constants.physical_constants['Bohr radius'][0]
-    eps0 = scipy.constants.epsilon_0
-    c = scipy.constants.c
-
-    DebyeSI = 3.33564e-30 #C m/Debye
-
-    Nmaximum = 3
-
-    Steps = 100
-
-    bvary = numpy.linspace(0,500e-4,Steps)
-    start = time.time()
-    Hamiltonian = Build_Hamiltonians(Nmaximum,RbCs,zeeman=True)
-    end = time.time()
-
-    print("Creating the Hamiltonian took {:.3f} s".format(end-start))
-    print("######################################")
-    start = end
-    energy = Vary_magnetic(Hamiltonian,(B,I,E),bvary)
-    end = time.time()
-
-    print("Evaluating the Hamiltonian took {:.3f} s".format(end-start))
-    print("######################################")
-    pfig = pyplot.figure()
-
-    for i in range(len(energy[:,0])):
-        pyplot.plot(bvary,1e-6*energy[i,:]/h,color='k')
-
-    pyplot.xlabel("Magnetic Field (G)")
-    pyplot.ylabel("Energy/$h$ (MHz)")
-    pyplot.show()
+        Hac =0.
+    return H0,Hz,Hdc,Hac

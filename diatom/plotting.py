@@ -1,8 +1,8 @@
-from matplotlib import pyplot,gridspec,colors,patches,collections#change
+from matplotlib import pyplot,gridspec,colors,patches,collections
 import numpy
-from diatom import calculate
-from diatom import hamiltonian
 import warnings
+import diatom.calculate as calculate
+import diatom.hamiltonian as hamiltonian
 from scipy import constants
 
 h = constants.h
@@ -330,32 +330,22 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
 
     N0 = N[gs]
 
-    gs_E = energies[gs]
+    energies = energies-energies[gs]
     lim =10
 
     l1 = numpy.where(N==N0)[0]
-
-    min_gs = prefactor*numpy.amin(energies[l1]-gs_E)/h
-    max_gs = prefactor*numpy.amax(energies[l1]-gs_E)/h
-
     l2 = numpy.where(N==N0+pm)[0]
 
 
-    if minf ==None:
+    if minf == None:
 
         emin = numpy.amin(energies[l2])
-        minf = 10e4
+        minf = prefactor*(emin)/h - Offset
 
-        f = prefactor*(emin-gs_E)/h - Offset
-        minf = min([minf,f])
-
-    if maxf ==None:
+    if maxf == None:
 
         emax = numpy.amax(energies[l2])
-        maxf = 0
-
-        f = prefactor*(emax-gs_E)/h - Offset
-        maxf = max([maxf,f])
+        maxf = prefactor*(emax)/h - Offset
 
     if pm == 1:
         ax0 = fig.add_subplot(grid[1,:-1])
@@ -378,17 +368,17 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
 
     #plotting the energy levels for ground state
     for l in l1:
-        f =prefactor*(energies[l]-gs_E)/h #- Offset
+        f =prefactor*(energies[l])/h 
         if l ==gs:
             ax0.plot([-lim,lim],[f,f],color='k',zorder=1.2)
         else:
             ax0.plot([-lim,lim],[f,f],color=gray,zorder=0.8)
     lbl = ['$\sigma_-$',"$\pi$","$\sigma_+$"]
 
-    for j,axis in enumerate(ax):
+    for j,axis in enumerate(ax):        
     #plotting for excited state
         for l in l2:
-            f = prefactor*(energies[l]-gs_E)/h - Offset
+            f = prefactor*(energies[l])/h - Offset
             if dz[l]!=0 and j==1:
                 axis.plot([-lim,lim],[f,f],color=blue,zorder=1.2)
             elif dp[l] !=0 and j ==2:
@@ -415,10 +405,11 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
     ax_bar = fig.add_subplot(grid[0,-1],sharey = ax[0])
     ax_bar.tick_params(labelleft=False,left=False, which='both')
 
-
-    #fix the ROI to be 300 kHz around the state the user has chosen
-    ax0.set_ylim(min_gs,max_gs)
-    f = prefactor*(energies-gs_E)/h-Offset
+    #fix the ROI to be 200 kHz around the state the user has chosen
+    if gs == 0:
+        ax0.set_ylim(-20e3*prefactor, 180e3*prefactor)
+    else:
+        ax0.set_ylim(-20e3*prefactor, 180e3*prefactor)
 
     #normalise function, returns a number between 0 and 1
     Norm = colors.LogNorm(vmin=1e-3,vmax=1,clip=True)
@@ -437,7 +428,7 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
     disp = ax2.transData.transform((lim,0))
     x1b = ax0.transData.inverted().transform(disp)[0]
 
-    Nz = len(numpy.where(dz!=0)[0])
+    Nz = len(numpy.where(dz[l2]!=0)[0])
     iz = 0
 
     deltax = (x1b-x1a)/(Nz+1)
@@ -449,7 +440,7 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
     disp = ax3.transData.transform((lim,0))
     y1b = ax0.transData.inverted().transform(disp)[0]
 
-    Np = len(numpy.where(dp!=0)[0])
+    Np = len(numpy.where(dp[l2]!=0)[0])
     ip =0
 
     deltay = (y1b-y1a)/(Np+1)
@@ -461,62 +452,64 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
     disp = ax1.transData.transform((lim,0))
     z1b = ax0.transData.inverted().transform(disp)[0]
 
-    Nm = len(numpy.where(dm!=0)[0])
+    Nm = len(numpy.where(dm[l2]!=0)[0])
     im = 0
 
     deltaz = (z1b-z1a)/(Nm+1)
     z0 = z1a+deltaz
-
+    f = prefactor*(energies)/h-Offset
+    
     for j,d in enumerate(dz):
-        #this block of code plots the dipole moments (or transition strengths)
-        if abs(d)>0:
-            width = max_width*Norm(3*numpy.abs(d)**2)
-            x = x0 +iz*deltax
-            # makes sure that the line is perfectly vertical in display coords
-            disp = ax0.transData.transform((x,0))
-            x2 = ax2.transData.inverted().transform(disp)[0]
-
-            p = patches.ConnectionPatch((x,0),(x2,f[j]),coordsA='data',coordsB='data',
-                                            axesA=ax0,axesB=ax2,zorder=5,color='k',
-                                            lw=width) #line object
-            ax2.add_artist(p) # add line to axes
-            iz+=1
-            #bar plot for transition strengths. Relative to spin-stretched TDM
-            ax_bar.barh(f[j],numpy.abs(d),color=blue,height=5)
-
-        d=dp[j]
-        if abs(d)>0:
-            width = max_width*Norm(3*numpy.abs(d)**2)
-            y= y0 +ip*deltay
-            # makes sure that the line is perfectly vertical in display coords
-
-            disp = ax0.transData.transform((y,0))
-            y2 = ax3.transData.inverted().transform(disp)[0]
-
-            p = patches.ConnectionPatch((y,0),(y2,f[j]),coordsA='data',coordsB='data',
-                                            axesA=ax0,axesB=ax3,zorder=5,color='k',
-                                            lw=width) #line object
-            ax3.add_artist(p)
-            ip+=1
-            #bar plot for transition strengths. Relative to spin-stretched TDM
-            ax_bar.barh(f[j],numpy.abs(d),color=green,height=5)
-
-        d=dm[j]
-        if abs(d)>0:
-            width = max_width*Norm(3*numpy.abs(d)**2)
-            z = z0 +im*deltaz
-            # makes sure that the line is perfectly vertical in display coords
-
-            disp = ax0.transData.transform((z,0))
-            z2 = ax1.transData.inverted().transform(disp)[0]
-
-            p = patches.ConnectionPatch((z,0),(z2,f[j]),coordsA='data',coordsB='data',
-                                            axesA=ax0,axesB=ax1,zorder=5,color='k',
-                                            lw=width)#line object
-            ax1.add_artist(p)
-            im +=1
-            #bar plot for transition strengths. Relative to spin-stretched TDM
-            ax_bar.barh(f[j],numpy.abs(d),color=red,height = 5)
+        #this block of code plots the dipole moments (or transition strengths
+        if j<max(l2) and f[j]<maxf:
+            if abs(d)>0 and j<max(l2):
+                width = max_width*Norm(3*numpy.abs(d)**2)
+                x = x0 +iz*deltax
+                # makes sure that the line is perfectly vertical in display coords
+                disp = ax0.transData.transform((x,0))
+                x2 = ax2.transData.inverted().transform(disp)[0]
+    
+                p = patches.ConnectionPatch((x,0),(x2,f[j]),coordsA='data',coordsB='data',
+                                                axesA=ax0,axesB=ax2,zorder=5,color='k',
+                                                lw=width) #line object
+                ax2.add_artist(p) # add line to axes
+                iz+=1
+                #bar plot for transition strengths. Relative to spin-stretched TDM
+                ax_bar.barh(f[j],numpy.abs(d),color=blue,height=1e4*prefactor)
+    
+            d=dp[j]
+            if abs(d)>0 and j<max(l2):
+                width = max_width*Norm(3*numpy.abs(d)**2)
+                y= y0 +ip*deltay
+                # makes sure that the line is perfectly vertical in display coords
+    
+                disp = ax0.transData.transform((y,0))
+                y2 = ax3.transData.inverted().transform(disp)[0]
+    
+                p = patches.ConnectionPatch((y,0),(y2,f[j]),coordsA='data',coordsB='data',
+                                                axesA=ax0,axesB=ax3,zorder=5,color='k',
+                                                lw=width) #line object
+                ax3.add_artist(p)
+                ip+=1
+                #bar plot for transition strengths. Relative to spin-stretched TDM
+                ax_bar.barh(f[j],numpy.abs(d),color=green,height=1e4*prefactor)
+    
+            d=dm[j]
+            if abs(d)>0 and j<max(l2):
+                width = max_width*Norm(3*numpy.abs(d)**2)
+                z = z0 +im*deltaz
+                # makes sure that the line is perfectly vertical in display coords
+    
+                disp = ax0.transData.transform((z,0))
+                z2 = ax1.transData.inverted().transform(disp)[0]
+    
+                p = patches.ConnectionPatch((z,0),(z2,f[j]),coordsA='data',coordsB='data',
+                                                axesA=ax0,axesB=ax1,zorder=5,color='k',
+                                                lw=width)#line object
+                ax1.add_artist(p)
+                im +=1
+                #bar plot for transition strengths. Relative to spin-stretched TDM
+                ax_bar.barh(f[j],numpy.abs(d),color=red,height = 1e4*prefactor)
 
     #setup log axes for axis 4 (bar plots)
     if log:
@@ -529,8 +522,8 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
         ax_bar.set_xticklabels(["","","",""],minor=True)
 
     # now to rescale the other axes so that they have the same y scale
-    ax1.set_ylim(minf-20,maxf+20)
-    grid.set_height_ratios([(maxf-minf)+40,300])
+    ax1.set_ylim(minf-20e3*prefactor,maxf+20e3*prefactor)
+    grid.set_height_ratios([(maxf-minf)+40e3*prefactor,200e3*prefactor])
     pyplot.subplots_adjust(hspace=0.1)
     grid.update()
 
@@ -538,7 +531,7 @@ def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
     ax0.set_ylabel("Energy/$h$ (kHz)")
 
     if Offset != 0:
-        ax[0].set_ylabel("Energy/$h$ (kHz) - {:.1f} MHz".format(Offset))
+        ax[0].set_ylabel("Energy/$h$ (kHz) - {:.3f} MHz".format(Offset+minf-20*1e3*prefactor))
     else:
         ax[0].set_ylabel("Energy/$h$ (Hz)")
 

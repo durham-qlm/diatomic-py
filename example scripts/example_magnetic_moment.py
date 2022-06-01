@@ -1,9 +1,9 @@
 import numpy
 import matplotlib.pyplot as pyplot
-import diatom.hamiltonian
-from diatom.constants import Rb87Cs133
+import hamiltonian
+from constants import Rb87Cs133
 from numpy.linalg import eigh
-import diatom.calculate
+import calculate
 import scipy.constants 
 
 muN = scipy.constants.physical_constants['nuclear magneton'][0]

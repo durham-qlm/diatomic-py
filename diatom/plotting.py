@@ -1,13 +1,11 @@
-from matplotlib import pyplot,gridspec,colors,patches
+from matplotlib import pyplot,gridspec,colors,patches,collections#change
 import numpy
-import os
-from diatom import Calculate
+from diatom import calculate
+from diatom import hamiltonian
 import warnings
 from scipy import constants
 
 h = constants.h
-
-cwd = os.path.dirname(os.path.abspath(__file__))
 
 def make_segments(x, y):
     ''' segment x and y points
@@ -68,14 +66,200 @@ def colorline(x, y, z=None, cmap=pyplot.get_cmap('copper'),
     z = numpy.asarray(z)
 
     segments = make_segments(x, y)
-    lc = LineCollection(segments, array=z, cmap=cmap, norm=norm,
+    lc = collections.LineCollection(segments, array=z, cmap=cmap, norm=norm,#change
                                     linewidth=linewidth,zorder=1.25)
 
     ax.add_collection(lc)
 
     return lc
 
-def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
+def export_energy(fname,energy,fields=None,labels=None,
+                                headers=None,dp=6,format=None):
+    ''' Export Energies in spreadsheet format.
+
+    This exports the energy of the states for a calculation in a human-readable spreadsheet format.
+
+    Currently only saves .csv files.
+
+    Args:
+        fname (string) - file name to save, appends .csv if not present.
+        Energy (numpy.ndarray) - Energies to save
+
+    Kwargs:
+        Fields (numpy.ndarray) - Field variables used in calculation
+        labels (numpy.ndarray) - labels for states
+        headers (list of strings) - header for each of the labels in labels
+        dp (float) - number of decimal places to use for output (default =6)
+        format (list of strings) - list of formats passed to numpy.savetxt for labels
+    '''
+    # some input sanitisation, ensures that the fname includes an extension
+    if fname[-4:]!=".csv":
+        fname = fname+".csv"
+    dp = int(numpy.round(dp))
+
+    # check whether the user has given labels and headers or  just one
+    lflag = False
+    hflag = False
+
+    if labels != None:
+        labels = numpy.array(labels)
+        lflag = True
+    else:
+        labels=[]
+
+    if headers != None:
+        hflag = True
+    else:
+        headers = []
+
+    # all this is just checking whether there are headers and labels, just
+    #labels, just headers or neither.
+
+    if not hflag and lflag:
+        warnings.warn("using default headers for labels",UserWarning)
+        headers = ["Label {:.0f}".format(x) for x in range(len(labels[0,:]))]
+
+    elif hflag and not lflag:
+        warnings.warn("headers given without labels",UserWarning)
+        headers =[]
+
+    if len(headers) != labels.shape[0]:
+        warnings.warn("Not enough headers given for chosen labels",UserWarning)
+        headers = ["Label {:.0f}".format(x) for x in range(len(labels[:,0]))]
+
+    # Now to write a string to make the output look nice. For simplicity we say
+    # that all the  labels must be given to 1 dp
+    if format==None:
+        format = ["%.1f" for x in range(len(labels[:,0]))]
+
+    # now just make the one for the main body of the output file. Specified by
+    # the dp argument.
+    if len(energy.shape)>1:
+        format2 = ["%."+str(dp)+"f" for x in range(len(energy[:,0]))]
+    else:
+        format2 = ["%."+str(dp)+"f"]
+    #numpy needs only one format argument
+    format.extend(format2)
+
+    headers =','.join(headers)
+
+
+    headers = ','.join(["Labels" for l in range(labels.shape[0])])+",Energy (Hz)\n"+headers
+
+    if type(fields) != type(None):
+        energy = numpy.insert(energy,0,fields.real,axis=1)
+        labels = numpy.insert(labels,0,[-1 for x in range(labels.shape[0])],axis=1)
+
+    output = numpy.row_stack((labels,energy))
+    numpy.savetxt(fname,output.T,delimiter=',',header = headers,fmt=format)
+
+def export_state_comp(fname,Nmax,I1,I2,states,labels=None,
+                                headers=None,dp=6,format=None):
+    ''' function to export state composition in a human-readable format
+    along the first row are optional headers and the labels for the basis States
+    in the uncoupled basis.
+
+    the user can supply optional labels for the states in a (x,y) list or array
+    where y is the number of states and x is the number of unique labels, for
+    instance a list of the N quantum  number for each state.
+
+    they can also (optionally) supply a (x,1) list to include custom headers
+    in the first row. If the labels kwarg is included and headers is not,
+    then non-descriptive labels are used to ensure correct output.
+
+    by default the output is given to 6 decimal places (truncated) this can be
+    adjusted using the kwarg dp
+
+    Args:
+        fname (string) : the filename and path to save the output file
+        Nmax (int/float) : the maximum value of N used in the calculation
+        I1,I2 (float) : the nuclear spin quantum numbers of nucleus 1 and 2
+        States (N,M) ndarray : eigenstates stored in an (N,M) ndarray, N is the
+                                number of eigenstates. M is the number of basis
+                                states.
+    kwargs:
+        labels (N,X) ndarray : ndarray containing X labels for each of the N states
+        headers (X) ndarray-like : Ndarray-like containing descriptions of the labels
+        dp (int) : number of decimal places to output the file to [default = 6]
+        format (list) :  list of strings for formatting the headers. Defaults to 1 dp.
+
+    '''
+
+    # some input sanitisation, ensures that the fname includes an extension
+    if fname[-4:]!=".csv":
+        fname = fname+".csv"
+    dp = int(numpy.round(dp))
+
+    # check whether the user has given labels and headers or  just one
+    lflag = False
+    hflag = False
+
+    if labels != None:
+        labels = numpy.array(labels)
+        lflag = True
+
+    if headers != None:
+        hflag = True
+    else:
+        headers = []
+
+
+    # create labels for basis states from Generate_vecs
+    # first step is to recreate the angular momentum operators
+    N, I1,I2 = hamiltonian.generate_vecs(Nmax,I1,I2)
+
+    # each basis state is an eigenstate of N^2, so N^2 is diagonal in our basis
+    # with eigenvalues N(N+1)
+
+    N2 = numpy.round([calculate.solve_quadratic(1,1,-1*x) for x in numpy.diag(hamiltonian.vector_dot(N,
+                                                                N))],0).real
+
+    # they are also eigenstates of Nz, I1z and I2z which are diagonal
+    # in the basis that we constructed.
+
+    MN = numpy.round(numpy.diag(N[2]),0).real
+    M1 = numpy.round(numpy.diag(I1[2]),1).real
+    M2 = numpy.round(numpy.diag(I2[2]),1).real
+
+    # Now we create a list of each of the values in the right place
+    state_list = ["({:.0f} : {:.0f} : {:.1f} : {:.1f})".format(N2[i],
+                                    MN[i],M1[i],M2[i]) for i in range(len(MN))]
+    # all this is just checking whether there are headers and labels, just
+    #labels, just headers or neither.
+
+    if not hflag and lflag:
+        warnings.warn("using default headers for labels",UserWarning)
+        headers = ["Label {:.0f}".format(x) for x in range(len(labels[0,:]))]
+
+    elif hflag and not lflag:
+        warnings.warn("headers given without labels",UserWarning)
+        headers =[]
+
+    if len(headers) != labels.shape[0]:
+        warnings.warn("Not enough headers given for chosen labels",UserWarning)
+        headers = ["Label {:.0f}".format(x) for x in range(len(labels[:,0]))]
+
+    # Now to write a string to make the output look nice. For simplicity we say
+    # that all the  labels must be given to 1 dp
+    if format==None:
+        format = ["%.1f" for x in range(len(headers))]
+
+    # now just make the one for the main body of the output file. Specified by
+    # the dp argument.
+    format2 = ["%."+str(dp)+"f" for x in range(len(state_list))]
+
+    #numpy needs only one format argument
+    format.extend(format2)
+
+    headers.extend(state_list)
+    headers =','.join(headers)
+    headers = ','.join(["Labels" for l in range(labels.shape[0])])+",States in (N:MN:M1:M2) basis\n"+headers
+    states=numpy.transpose(states)#changde	
+    output = numpy.insert(states.real,0,labels.real,axis=0)
+    numpy.savetxt(fname,output.T,delimiter=',',header = headers,fmt=format)
+
+
+def transition_plot(energies,states,gs,Nmax,I1,I2,TDMs=None,
             pm = +1, Offset=0,fig=pyplot.gcf(),
             log=False,minf=None,maxf=None,prefactor=1e-3,col=None):
 
@@ -104,11 +288,16 @@ def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
 
     '''
 
-    gray ='xkcd:grey'
+    gray ='xkcd:lightgold'
+    gray='#fddc5c'
     if col == None:
-        green ='xkcd:darkgreen'
-        red ='xkcd:maroon'
-        blue ='xkcd:azure'
+        cc=['#61e160','#fe2f4a','#155084']
+        green=cc[0]
+        red=cc[1]
+        blue=cc[2]
+        #green ='xkcd:darkgreen'
+        #red ='xkcd:maroon'
+        #blue ='xkcd:azure'
 
         col=[red,blue,green]
 
@@ -121,9 +310,9 @@ def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
         dz = TDMs[1,:]
         dp = TDMs[2,:]
     elif TDMs == None:
-        dm = numpy.round(Calculate.TDM(Nmax,I1,I2,+1,States,gs),6)
-        dz = numpy.round(Calculate.TDM(Nmax,I1,I2,0,States,gs),6)
-        dp = numpy.round(Calculate.TDM(Nmax,I1,I2,-1,States,gs),6)
+        dm = numpy.round(calculate.transition_dipole_moment(Nmax,I1,I2,+1,states,gs),6)
+        dz = numpy.round(calculate.transition_dipole_moment(Nmax,I1,I2,0,states,gs),6)
+        dp = numpy.round(calculate.transition_dipole_moment(Nmax,I1,I2,-1,states,gs),6)
 
     if abs(pm)>1:
         pm = int(pm/abs(pm))
@@ -136,7 +325,7 @@ def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
 
     grid= gridspec.GridSpec(2,4,width_ratios=widths)
 
-    N,MN = Calculate.LabelStates_N_MN(States,Nmax,I1,I2)
+    N,MN = calculate.label_states_N_MN(states,Nmax,I1,I2)
     #find the ground state that the user has put in
 
     N0 = N[gs]
@@ -355,28 +544,3 @@ def TDM_plot(energies,States,gs,Nmax,I1,I2,TDMs=None,
 
     ax_bar.set_xlabel("TDM ($d_0$)")
 
-if __name__ == '__main__':
-    from diatom import Hamiltonian,Calculate
-
-
-    H0,Hz,HDC,HAC = Hamiltonian.Build_Hamiltonians(3,Hamiltonian.RbCs,zeeman=True)
-
-    eigvals,eigstate = numpy.linalg.eigh(H0+181.5e-4*Hz)
-
-    TDM_plot(eigvals,eigstate,1,
-    Nmax = 3,I1 = Hamiltonian.RbCs['I1'], I2 = Hamiltonian.RbCs['I2'],
-    Offset=980e3,prefactor=1e-3)
-
-    fig = pyplot.figure(2)
-
-    loc = 0
-    TDM_pi = Calculate.TDM(3,Hamiltonian.RbCs['I1'],Hamiltonian.RbCs['I2'],0,eigstate,loc)
-    TDM_Sigma_plus = Calculate.TDM(3,Hamiltonian.RbCs['I1'],Hamiltonian.RbCs['I2'],-1,eigstate,loc)
-    TDM_Sigma_minus = Calculate.TDM(3,Hamiltonian.RbCs['I1'],Hamiltonian.RbCs['I2'],+1,eigstate,loc)
-
-
-    TDMs =[TDM_Sigma_minus,TDM_pi,TDM_Sigma_plus]
-
-    TDM_plot(eigvals,eigstate,loc,3,Hamiltonian.RbCs['I1'],Hamiltonian.RbCs['I2'],Offset=980e3,fig=fig)
-
-    pyplot.show()

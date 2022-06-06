@@ -34,7 +34,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/PhilipDGregory/Diatomic-Py",
     ext_modules=cythonize("calculate.py"),
-    zip_safe=False
+    zip_safe=False,
     license = 'Boost Software License - Version 1.0',
     classifiers=[
         "Programming Language :: Python :: 3",

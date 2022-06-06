@@ -1,5 +1,4 @@
 import setuptools
-from Cython.Build import cythonize
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -14,8 +13,6 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/PhilipDGregory/Diatomic-Py",
     packages= ['diatom'],
-    ext_modules=cythonize("diatom/calculate.py"),
-    zip_safe=False,
     license = 'Boost Software License - Version 1.0',
     classifiers=[
         "Programming Language :: Python :: 3",

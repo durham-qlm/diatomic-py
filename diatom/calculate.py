@@ -1,4 +1,4 @@
-import diatom.hamiltonian
+import diatom.hamiltonian as hamiltonian
 import numpy
 import scipy.constants
 from sympy.physics.wigner import wigner_3j

@@ -19,6 +19,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=['numpy>=1.19','sympy>=1.4','scipy>=1.1','pyprind>=2.11','psutil>=5.8'],
+    install_requires=['numpy>=1.19','sympy>=1.4','scipy>=1.1'],
     python_requires='>=3.7',
 )

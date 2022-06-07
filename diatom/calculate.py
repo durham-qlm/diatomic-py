@@ -325,7 +325,6 @@ def sort_smooth(energy, states):
     Args:
         Energy (numpy.ndarray) : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
         States (numpy.ndarray): numpy.ndarray containing the states, in the same order as Energy
-        pb (bool) : optionally show progress bar, requires pyprind. Doesn't work in all environments (Sorry!)
     Returns:
         Energy (numpy.ndarray) : numpy.ndarray containing the eigenergies, as from numpy.linalg.eig
         States (numpy.ndarray): numpy.ndarray containing the states, in the same order as Energy E[x,i] -> States[x,:,i]

@@ -248,16 +248,35 @@ def magnetic_moment(States, Nmax, Consts):
     Args:
         States (numpy.ndarray): matrix for eigenstates of problem output from numpy.linalg.eig
         Nmax (int): Maximum rotational quantum number in original calculations
-        I1,I2 (float): nuclear spin quantum numbers
+        Consts: Dictionary of constants for the molecular to be calculated
         
     '''
     
-    muZ = -1*hamiltonian.zeeman_ham(Nmax,Consts['I1'],Consts['I2'],Consts)
+    muz = -1*hamiltonian.zeeman_ham(Nmax,Consts['I1'],Consts['I2'],Consts)
     
     mu =numpy.einsum('ijk,jl,ilk->ik',
-            numpy.conjugate(States),muZ,
+            numpy.conjugate(States),muz,
             States)
     return mu
+
+
+def electric_moment(States, Nmax, Consts):
+    '''Returns the electric dipole moments of each eigenstate
+    
+    Args:
+        States (numpy.ndarray): matrix for eigenstates of problem output from numpy.linalg.eig
+        Nmax (int): Maximum rotational quantum number in original calculations
+        Consts: Dictionary of constants for the molecular to be calculated
+        
+    '''
+    
+    dz = -1*hamiltonian.dc(Nmax,Consts['d0'],Consts['I1'],Consts['I2'])
+    
+    d =numpy.einsum('ijk,jl,ilk->ik',
+            numpy.conjugate(States),dz,
+            States)
+    return d
+
 
 
 def sort_by_state(energies, states, Nmax, Consts):

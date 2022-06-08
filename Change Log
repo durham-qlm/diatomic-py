@@ -20,3 +20,11 @@ NOTE: A number of changes have been made to calculate.py which may break compati
 - Moved export_energy and export_state_comp to plotting.py. Using this module as a good place for bits of code that are in progress or not explicitly needed in current workflows. 
 
 - Bug fix in transition_dipole_moment (formerly TDM) function that avoids having to transpose array on input. 
+
+
+
+
+8th June 2022:
+- Added function for calculating the lab-frame electric dipole moment. 
+
+- Added example script for calculating the lab-frame electric dipole moments. 

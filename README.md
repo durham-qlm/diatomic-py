@@ -3,7 +3,7 @@ Python module to calculate the hyperfine energy levels of singlet sigma diatomic
 
 The hyperfine structure can be calculated in static electric and magnetic fields and, when provided the polarisability, oscillating electric fields.
 
-Read the full [documentation](diatomic-py.readthedocs.io)
+Read the full [documentation](https://diatomic-py.readthedocs.io)
 
 
 # Installation
@@ -25,4 +25,4 @@ Diatomic-py is licensed under a BSD 3 clause license. A copy can be found [here]
 
 If you use our work for academic purposes you can cite us using:
 
-J.A.Blackmore *et al.* Diatomic-py: A python module for calculating the rotational and hyperfine structure of ^1Σ molecules, [Arxiv *e-prints* 2205.05686](https://arxiv.org/abs/2205.05686) (2022).
+J.A.Blackmore *et al.* Diatomic-py: A python module for calculating the rotational and hyperfine structure of <sup>1</sup>Σ molecules, [Arxiv *e-prints* 2205.05686](https://arxiv.org/abs/2205.05686) (2022).

@@ -3,12 +3,12 @@ Python module to calculate the hyperfine energy levels of singlet sigma diatomic
 
 The hyperfine structure can be calculated in static electric and magnetic fields and, when provided the polarisability, oscillating electric fields.
 
-Read the full [documentation](https://diatomic-py.readthedocs.io)
+Read the full [documentation](https://diatomic-py.readthedocs.io).
 
 
 # Installation
 
-Installation is available offline using the .whl and .tar.gz files [available here](dist)
+Installation is available offline using the .whl and .tar.gz files [available here](dist).
 
 Installation is also available via the python package index
 ` pip install diatomic-py`
@@ -21,7 +21,7 @@ Installation is also available via the python package index
 
 # License
 
-Diatomic-py is licensed under a BSD 3 clause license. A copy can be found [here](LICENSE)
+Diatomic-py is licensed under a BSD 3 clause license. A copy can be found [here](LICENSE).
 
 If you use our work for academic purposes you can cite us using:
 

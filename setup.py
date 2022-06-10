@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="diatom",
-    version="1.1.0",
+    version="1.2.0",
     author="Jake Blackmore",
     author_email="j.a.blackmore@durham.ac.uk",
-    description="A package for calculating molecular hyperfine structure.",
+    description="A package for calculating rotational and hyperfine structure of singlet diatomic molecules.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/JakeBlackmore/Diatomic-Py",
+    url="https://github.com/PhilipDGregory/Diatomic-Py",
     packages= ['diatom'],
     license = 'Boost Software License - Version 1.0',
     classifiers=[
@@ -19,6 +19,8 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=['numpy>=1.19','sympy>=1.4','scipy>=1.1','pyprind>=2.11','psutil>=5.8'],
+    install_requires=['numpy>=1.19','sympy>=1.4','scipy>=1.1'],
     python_requires='>=3.7',
 )
+
+

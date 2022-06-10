@@ -8,7 +8,7 @@ Read the full [documentation](diatomic-py.readthedocs.io)
 
 # Installation
 
-Installation is available offline using the .whl and .tar.gz files [available here](../blob/master/dist)
+Installation is available offline using the .whl and .tar.gz files [available here](dist)
 
 Installation is also available via the python package index
 ` pip install diatomic-py`
@@ -21,8 +21,8 @@ Installation is also available via the python package index
 
 # License
 
-Diatomic-py is licensed under a BSD 3 clause license. A copy can be found [here](../blob/master/LICENSE)
+Diatomic-py is licensed under a BSD 3 clause license. A copy can be found [here](LICENSE)
 
 If you use our work for academic purposes you can cite us using:
 
-J.A.Blackmore *et al.* Diatomic-py: A python module for calculating the rotational and hyperfine structure of ^1Σ molecules, Arxiv *e-prints* 2205.05686 (2022).
+J.A.Blackmore *et al.* Diatomic-py: A python module for calculating the rotational and hyperfine structure of ^1Σ molecules, [Arxiv *e-prints* 2205.05686](https://arxiv.org/abs/2205.05686) (2022).

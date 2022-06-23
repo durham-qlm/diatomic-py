@@ -1,30 +1,30 @@
-diatom package
+diatomic package
 ==============
 
 Submodules
 ----------
 
-diatom.calculate module
+diatomic.calculate module
 -----------------------
 
-.. automodule:: diatom.calculate
+.. automodule:: diatomic.calculate
    :members:
    :undoc-members:
    :show-inheritance:
 
-diatom.hamiltonian module
+diatomic.hamiltonian module
 -------------------------
 
-.. automodule:: diatom.hamiltonian
+.. automodule:: diatomic.hamiltonian
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-diatom.plotting module
+diatomic.plotting module
 ----------------------
 
-.. automodule:: diatom.plotting
+.. automodule:: diatomic.plotting
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,7 +32,7 @@ diatom.plotting module
 Module contents
 ---------------
 
-.. automodule:: diatom
+.. automodule:: diatomic
    :members:
    :undoc-members:
    :show-inheritance:

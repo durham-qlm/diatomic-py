@@ -1,0 +1,14 @@
+LICENSE
+README.md
+pyproject.toml
+setup.py
+diatomic/__init__.py
+diatomic/calculate.py
+diatomic/constants.py
+diatomic/hamiltonian.py
+diatomic/plotting.py
+diatomic.egg-info/PKG-INFO
+diatomic.egg-info/SOURCES.txt
+diatomic.egg-info/dependency_links.txt
+diatomic.egg-info/requires.txt
+diatomic.egg-info/top_level.txt

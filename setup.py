@@ -4,15 +4,15 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="diatom",
-    version="1.0.0",
+    name="diatomic-py",
+    version="1.0.1",
     author="Jake Blackmore",
     author_email="jacob.blackmore@physics.ox.ac.uk",
     description="A package for calculating rotational and hyperfine structure of singlet diatomic molecules.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/JakeBlackmore/Diatomic-Py",
-    packages= ['diatom'],
+    packages= ['diatomic'],
     license = 'Boost Software License - Version 1.0',
     classifiers=[
         "Programming Language :: Python :: 3",

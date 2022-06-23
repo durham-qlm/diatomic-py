@@ -38,7 +38,7 @@ Usage
 -----
 
 Typical usage of this module requires the user-facing calculate module.
-    ``from diatom import calculate``
+    ``from diatomic import calculate``
 or
     ``import diatomic.calculate as calculate``
 

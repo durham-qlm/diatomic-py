@@ -1,7 +1,7 @@
-diatom
-======
+diatomic
+========
 
 .. toctree::
    :maxdepth: 4
 
-   diatom
+   diatomic

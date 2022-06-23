@@ -40,7 +40,7 @@ Usage
 Typical usage of this module requires the user-facing calculate module.
     ``from diatom import calculate``
 or
-    ``import diatom.calculate as calculate``
+    ``import diatomic.calculate as calculate``
 
 
 An example calculations are shown in the python scripts on `GitHub`_.
@@ -48,14 +48,14 @@ An example calculations are shown in the python scripts on `GitHub`_.
 .. _GitHub: https://github.com/JakeBlackmore/Diatomic-Py/blob/master/example scripts
 
 Access to all of the individual terms is available through the hamiltonian module
-    ``from diatom import hamiltonian``
+    ``from diatomic import hamiltonian``
 
 Full descriptions of all functions can be found using the links below:
 
 .. toctree::
    :maxdepth: 2
 
-   diatom
+   diatomic
 
 Paper
 -----

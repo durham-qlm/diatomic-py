@@ -1,30 +1,36 @@
+13th July 2022:
+
+Changelog from Blackmore Arxiv Release.
+
+- Corrected typo in "generate_vecs" in "label_states_xx" functions which would cause python Errors.
+
 1st June 2022:
 
-Changelog from Blackmore pre-publication release 17th April 2020. 
-NOTE: A number of changes have been made to calculate.py which may break compatibility with the old version. 
+Changelog from Blackmore pre-publication release 17th April 2020.
+NOTE: A number of changes have been made to calculate.py which may break compatibility with the old version.
 
-- Removed capitalisation from module names to match other Python functions. 
+- Removed capitalisation from module names to match other Python functions.
 
-- Attempted to unify capitalisation across function names and variables. Capitalisation left for quantum numbers e.g. N, MN, I1... and in the names of the molecules. 
+- Attempted to unify capitalisation across function names and variables. Capitalisation left for quantum numbers e.g. N, MN, I1... and in the names of the molecules.
 
 - Moved molecular constants into dedicated diatom.calculate module. The names for each dictionary have been changed to include the atomic mass of both species in a consistent way, e.g. Rb87Cs133 and K40Rb87.
 
-- Added molecular constants for K40Rb87. Na23K40, and Na23Rb87, citations give in module. 
+- Added molecular constants for K40Rb87. Na23K40, and Na23Rb87, citations give in module.
 
-- Added "magnetic_moment" function to calculate magnetic moments of molecular states. 
+- Added "magnetic_moment" function to calculate magnetic moments of molecular states.
 
-- Added "sort_by_state" function to sort states by (N, MF)_k. 
+- Added "sort_by_state" function to sort states by (N, MF)_k.
 
-- Removed all references to pyprind from calculate.py (was previously used in the sort_smooth function) to help compatibility and simplify installation. 
+- Removed all references to pyprind from calculate.py (was previously used in the sort_smooth function) to help compatibility and simplify installation.
 
-- Moved export_energy and export_state_comp to plotting.py. Using this module as a good place for bits of code that are in progress or not explicitly needed in current workflows. 
+- Moved export_energy and export_state_comp to plotting.py. Using this module as a good place for bits of code that are in progress or not explicitly needed in current workflows.
 
-- Bug fix in transition_dipole_moment (formerly TDM) function that avoids having to transpose array on input. 
+- Bug fix in transition_dipole_moment (formerly TDM) function that avoids having to transpose array on input.
 
 
 
 
 8th June 2022:
-- Added function for calculating the lab-frame electric dipole moment. 
+- Added function for calculating the lab-frame electric dipole moment.
 
-- Added example script for calculating the lab-frame electric dipole moments. 
+- Added example script for calculating the lab-frame electric dipole moments.

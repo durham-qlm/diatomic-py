@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: diatomic-py
-Version: 1.0.1
+Version: 1.0.2
 Summary: A package for calculating rotational and hyperfine structure of singlet diatomic molecules.
 Home-page: https://github.com/JakeBlackmore/Diatomic-Py
 Author: Jake Blackmore

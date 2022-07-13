@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="diatomic-py",
-    version="1.0.1",
+    version="1.0.2",
     author="Jake Blackmore",
     author_email="jacob.blackmore@physics.ox.ac.uk",
     description="A package for calculating rotational and hyperfine structure of singlet diatomic molecules.",

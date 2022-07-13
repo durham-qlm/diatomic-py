@@ -106,7 +106,7 @@ def label_states_I_MI(states,Nmax,I1,I2,locs = None):
 
     #I = I1 + I2 change
 
-    N, I1,I2 = hamiltonian.Generate_vecs(Nmax,I1,I2)#change
+    N, I1,I2 = hamiltonian.generate_vecs(Nmax,I1,I2)#change
     
     I = I1 + I2#change
 
@@ -149,7 +149,7 @@ def label_states_F_MF(states,Nmax,I1,I2,locs=None):
     if locs != None:
         states = states[:,locs]
 
-    N, I1,I2 = hamiltonian.Generate_vecs(Nmax,I1,I2)
+    N, I1,I2 = hamiltonian.generate_vecs(Nmax,I1,I2)
 
     F = N + I1 + I2
 

@@ -1,7 +1,7 @@
 import numpy
 from matplotlib import pyplot
-import diatom.hamiltonian as hamiltonian
-from diatom.constants import Rb87Cs133
+import diatomic.hamiltonian as hamiltonian
+from diatomic.constants import Rb87Cs133
 from numpy.linalg import eigh
 from scipy import constants
 from matplotlib.collections import LineCollection
@@ -81,7 +81,7 @@ for i in range(numpy.shape(energies)[1]):
     pyplot.plot(I/1e7, (energies[:,i]-numpy.amin(energies))/(1e6*h), linestyle='solid', color='lightgray', zorder=0)
     
     #add colour on top to indicate the component that has N=1, MN=1, IRb=3/2, ICs=7/2
-    cl=colorline(I/1e7,(energies[:,i]-numpy.amin(energies))/(1e6*h),z=abs(numpy.real(states[:,32,i])),cmap='RbCs_map_blue',norm=LogNorm(vmin=1e-2,vmax=1),linewidth=2.0)
+    cl=colorline(I/1e7,(energies[:,i]-numpy.amin(energies))/(1e6*h),z=abs(numpy.real(states[:,32,i])),norm=LogNorm(vmin=1e-2,vmax=1),linewidth=2.0)
 
    
 

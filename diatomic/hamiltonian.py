@@ -128,7 +128,7 @@ def vector_dot(x,y):
         Returns:
             Z (numpy.ndarray): result of the dot product, JxJ array
     '''
-    x_y = numpy.zeros(x[0].shape,dtype=numpy.complex)
+    x_y = numpy.zeros(x[0].shape,dtype=complex)
     for i in range(x.shape[0]):
         x_y += numpy.dot(x[i],y[i])
     return x_y
@@ -520,7 +520,7 @@ def dc(Nmax,d0,I1,I2):
      '''
 
     shape = numpy.sum(numpy.array([2*x+1 for x in range(0,Nmax+1)]))
-    HDC = numpy.zeros((shape,shape),dtype= numpy.complex)
+    HDC = numpy.zeros((shape,shape),dtype=complex)
 
     I1shape = int(2*I1+1)
     I2shape = int(2*I2+1)
@@ -563,7 +563,7 @@ def ac_iso(Nmax,a0,I1,I2):
     shape = numpy.sum(numpy.array([2*x+1 for x in range(0,Nmax+1)]))
     I1shape = int(2*I1+1)
     I2shape = int(2*I2+1)
-    HAC = numpy.zeros((shape,shape),dtype= numpy.complex)
+    HAC = numpy.zeros((shape,shape), dtype=complex)
     i=0
     j=0
     for N1 in range(0,Nmax+1):
@@ -607,7 +607,7 @@ def ac_aniso(Nmax,a2,Beta,I1,I2):
     I1shape = int(2*I1+1)
     I2shape = int(2*I2+1)
     shape = numpy.sum(numpy.array([2*x+1 for x in range(0,Nmax+1)]))
-    HAC = numpy.zeros((shape,shape),dtype= numpy.complex)
+    HAC = numpy.zeros((shape,shape), dtype=complex)
     i=0
     j=0
     for N1 in range(0,Nmax+1):

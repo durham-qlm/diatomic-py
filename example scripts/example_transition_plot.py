@@ -5,9 +5,9 @@ Note, this uses the transition_plot function from the plotting.py module!
 '''
 
 from numpy.linalg import eigh
-import diatom.plotting as plotting
-import diatom.hamiltonian as hamiltonian
-from diatom.constants import Rb87Cs133
+import diatomic.plotting as plotting
+import diatomic.hamiltonian as hamiltonian
+from diatomic.constants import Rb87Cs133
 import matplotlib.pyplot as pyplot
 
 Nmax=4

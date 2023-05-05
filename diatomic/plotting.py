@@ -1,8 +1,8 @@
 from matplotlib import pyplot,gridspec,colors,patches,collections
 import numpy
 import warnings
-import diatom.calculate as calculate
-import diatom.hamiltonian as hamiltonian
+from . import calculate
+from . import hamiltonian
 from scipy import constants
 
 h = constants.h

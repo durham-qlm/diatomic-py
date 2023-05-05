@@ -2,8 +2,8 @@
 
 import numpy
 import matplotlib.pyplot as pyplot
-import diatom.hamiltonian as hamiltonian
-from diatom.constants import Rb87Cs133
+import diatomic.hamiltonian as hamiltonian
+from diatomic.constants import Rb87Cs133
 from scipy.constants import h
 from numpy.linalg import eigh
 

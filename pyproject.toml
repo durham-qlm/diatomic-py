@@ -29,16 +29,19 @@ dependencies = [
 test = [
   "pytest"
 ]
-dev = [
-  "diatomic[test]",
-  "black",
-  "pre-commit",
-  "ruff",
+plotting = [
+  "matplotlib"
+]
+docs = [
   "sphinx",
   "sphinx-book-theme"
 ]
-plotting = [
-  "matplotlib"
+dev = [
+  "diatomic[test]",
+  "diatomic[docs]",
+  "black",
+  "pre-commit",
+  "ruff",
 ]
 
 [tool.ruff]

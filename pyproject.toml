@@ -1,3 +1,45 @@
 [build-system]
-requires = ["setuptools>=42"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "diatomic"
+version = "0.0.0"
+description = "A package for calculating rotational and hyperfine structure of singlet diatomic molecules."
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Jake Blackmore", email = "j.a.blackmore@durham.ac.uk"},
+  {name = "Tom Hepworth", email = "tom.hepworth@durham.ac.uk"},
+]
+keywords = ["quantum", "singlet", "diatomic", "molecules", "hyperfine", "hamiltonian"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent"
+]
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "sympy",
+  "scipy"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest"
+]
+dev = [
+  "diatomic[test]",
+  "black",
+  "pre-commit",
+  "ruff",
+  "sphinx",
+  "sphinx-book-theme"
+]
+plotting = [
+  "matplotlib"
+]
+
+[tool.ruff]
+src = ["src"]

@@ -1,11 +1,11 @@
 diatomic-py
 ===========
 
-.. image:: https://github.com/durham-qlm/diatomic-py/actions/workflows/code_quality.yml/badge.svg?event=push&branch=main
+.. image:: https://github.com/durham-qlm/diatomic-py/actions/workflows/code_quality.yml/badge.svg?event=push&branch=master
     :alt: Code Quality Status
     :target: https://github.com/durham-qlm/diatomic-py/actions/workflows/code_quality.yml
 
-.. image:: https://github.com/durham-qlm/diatomic-py/actions/workflows/test-suite.yml/badge.svg?event=push&branch=main
+.. image:: https://github.com/durham-qlm/diatomic-py/actions/workflows/test-suite.yml/badge.svg?event=push&branch=master
     :alt: Test Suite Status
     :target: https://github.com/durham-qlm/diatomic-py/actions/workflows/test-suite.yml
 

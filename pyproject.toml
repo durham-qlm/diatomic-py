@@ -3,10 +3,10 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "diatomic"
+name = "diatomic-py"
 version = "2.0.0"
 description = "A package for calculating rotational and hyperfine structure of singlet diatomic molecules."
-readme = "README.md"
+readme = "README.rst"
 license = {file = "LICENSE"}
 authors = [
   {name = "Jake Blackmore", email = "j.a.blackmore@durham.ac.uk"},
@@ -37,8 +37,8 @@ docs = [
   "sphinx-book-theme"
 ]
 dev = [
-  "diatomic[test]",
-  "diatomic[docs]",
+  "diatomic-py[test]",
+  "diatomic-py[docs]",
   "black",
   "pre-commit",
   "ruff",

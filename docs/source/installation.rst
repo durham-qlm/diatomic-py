@@ -8,17 +8,7 @@ To install from the PyPi package repository, do
 
 .. code-block:: shell
 
-    python -m pip install diatomic-py
-
-Conda Installation
-------------------
-
-To install into the active conda environment
-
-.. code-block:: shell
-
-    conda install diatomic-py
-
+    python -m pip install ".[plotting]"
 
 Installation from source
 ------------------------

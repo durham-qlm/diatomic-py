@@ -24,7 +24,10 @@ This work has continued to evolve since the release of the paper, and so the API
 
 PyPi Installation
 -----------------
-This form of the package is not currently available on PyPI
+
+.. code-block:: shell
+
+    python -m pip install ".[plotting]"
 
 Manual Installation
 -------------------

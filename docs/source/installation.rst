@@ -8,12 +8,15 @@ To install from the PyPi package repository, do
 
 .. code-block:: shell
 
-    python -m pip install ".[plotting]"
+    python -m pip install diatomic-py
 
 Installation from source
 ------------------------
 
 .. code-block:: shell
+
+    git clone https://github.com/durham-qlm/diatomic-py.git
+    cd diatomic-py
 
     # Installs essentials + matplotlib
     python -m pip install ".[plotting]"

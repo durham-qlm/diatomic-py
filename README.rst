@@ -27,7 +27,7 @@ PyPi Installation
 
 .. code-block:: shell
 
-    python -m pip install ".[plotting]"
+    python -m pip install diatomic-py
 
 Manual Installation
 -------------------

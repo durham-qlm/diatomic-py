@@ -35,15 +35,14 @@ def solve_system(hamiltonians, num_diagonals=None):
     eigenenergies_raw, eigenstates_raw = log_time(np.linalg.eigh)(hamiltonians)
     if hamiltonians.ndim == 2:
         return eigenenergies_raw, eigenstates_raw
-    elif hamiltonians.ndim == 3:
+    elif hamiltonians.ndim >= 3:
         eigenenergies, eigenstates = sort_smooth(
             eigenenergies_raw, eigenstates_raw, num_diagonals=num_diagonals
         )
         return eigenenergies, eigenstates
     else:
         raise ValueError(
-            "Too many dimensions, solve_system doesn't support smoothing"
-            " eigenvalues over >1 parameters"
+            "Incorrect dimensionality"
         )
 
 
@@ -92,55 +91,61 @@ def sort_smooth(eigvals, eigvecs, num_diagonals=None):
     Raises:
         ValueError: If eigvecs does not have three dimensions.
     """
-    if eigvecs.ndim != 3:
-        raise ValueError("eigvecs is not a set of eigenvectors over one parameter.")
+    # if eigvecs.ndim != 3:
+    #     raise ValueError("eigvecs is not a set of eigenvectors over one parameter.")
 
-    param_step_count = eigvecs.shape[0]
-    basis_size = eigvecs.shape[1]
-    eigstate_count = eigvecs.shape[2]
+    param_step_counts = eigvecs.shape[0:-2]
+    n_params = len(param_step_counts)
+    #loop over each parameter dimension
+    for param_index in range(n_params):
+        param_step_count = eigvecs.shape[param_index]
+        basis_size = eigvecs.shape[-2]
+        eigstate_count = eigvecs.shape[-1]
 
-    # Compute overlap matrix between (k)th and (k-1)th
-    if num_diagonals is not None:
-        k = min(num_diagonals, eigstate_count - 1)
-        diagonals = np.zeros((param_step_count - 1, 2 * k + 1, eigstate_count))
-        for diag_num in range(-k, k + 1):
-            my_prod_diag = np.abs(
-                _matrix_prod_diagonal(
-                    eigvecs[:-1].swapaxes(-1, -2), eigvecs[1:].conj(), d=diag_num
+        # Compute overlap matrix between (k)th and (k-1)th
+        if num_diagonals is not None:
+            k = min(num_diagonals, eigstate_count - 1)
+            diagonals = np.zeros((param_step_count - 1, 2 * k + 1, eigstate_count))
+            for diag_num in range(-k, k + 1):
+                my_prod_diag = np.abs(
+                    _matrix_prod_diagonal(
+                        eigvecs[:-1].swapaxes(-1, -2), eigvecs[1:].conj(), d=diag_num
+                    )
                 )
+                if diag_num > 0:
+                    diagonals[
+                        :, k - diag_num, diag_num : diag_num + my_prod_diag.shape[1]
+                    ] = my_prod_diag
+                else:
+                    diagonals[:, k - diag_num, 0 : my_prod_diag.shape[1]] = my_prod_diag
+
+            best_overlaps = np.argmax(diagonals, axis=-2) - np.arange(
+                k, k - eigstate_count, -1
             )
-            if diag_num > 0:
-                diagonals[
-                    :, k - diag_num, diag_num : diag_num + my_prod_diag.shape[1]
-                ] = my_prod_diag
-            else:
-                diagonals[:, k - diag_num, 0 : my_prod_diag.shape[1]] = my_prod_diag
+        else:
+            overlap_matrices = np.abs(eigvecs[:-1].swapaxes(-1, -2) @ eigvecs[1:].conj())
+            best_overlaps = np.argmax(overlap_matrices, axis=1)
 
-        best_overlaps = np.argmax(diagonals, axis=-2) - np.arange(
-            k, k - eigstate_count, -1
-        )
-    else:
-        overlap_matrices = np.abs(eigvecs[:-1].swapaxes(-1, -2) @ eigvecs[1:].conj())
-        best_overlaps = np.argmax(overlap_matrices, axis=1)
+        # Cumulative permutations
+        integrated_permutations = np.empty((param_step_count, eigstate_count), dtype=int)
+        integrated_permutations[-1] = np.arange(eigstate_count)
 
-    # Cumulative permutations
-    integrated_permutations = np.empty((param_step_count, eigstate_count), dtype=int)
-    integrated_permutations[-1] = np.arange(eigstate_count)
+        for i in range(param_step_count - 2, -1, -1):
+            integrated_permutations[i] = best_overlaps[i][integrated_permutations[i + 1]]
 
-    for i in range(param_step_count - 2, -1, -1):
-        integrated_permutations[i] = best_overlaps[i][integrated_permutations[i + 1]]
+        # Rearrange to maintain continuity
+        # sorted_eigvals = eigvals[
+        eigvals = eigvals[
+            np.arange(param_step_count)[:, None], integrated_permutations
+        ]
+        # sorted_eigvecs = eigvecs[
+        eigvecs = eigvecs[
+            np.arange(param_step_count)[:, None, None],
+            np.arange(basis_size)[None, :, None],
+            integrated_permutations[:, None, :],
+        ]
 
-    # Rearrange to maintain continuity
-    sorted_eigvals = eigvals[
-        np.arange(param_step_count)[:, None], integrated_permutations
-    ]
-    sorted_eigvecs = eigvecs[
-        np.arange(param_step_count)[:, None, None],
-        np.arange(basis_size)[None, :, None],
-        integrated_permutations[:, None, :],
-    ]
-
-    return sorted_eigvals, sorted_eigvecs
+    return eigvals, eigvecs
 
 
 def _get_prior_repeat_indices(labels):

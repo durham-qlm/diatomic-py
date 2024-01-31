@@ -31,24 +31,24 @@ mol.Nmax = 2
 INTEN1065 = 3.07 * kWpercm2
 B = 181.699 * GAUSS
 
-# INTEN_STEPS = 200
-# INTEN_MIN = 0.001
-# INTEN_MAX = 20
-# INTEN1065 = np.linspace(INTEN_MIN, INTEN_MAX, INTEN_STEPS) * kWpercm2
-
 INTEN_STEPS = 200
 INTEN_MIN = 0.001
 INTEN_MAX = 20
-INTEN817 = np.linspace(INTEN_MIN, INTEN_MAX, INTEN_STEPS) * kWpercm2
+INTEN1065 = np.linspace(INTEN_MIN, INTEN_MAX, INTEN_STEPS) * kWpercm2
+
+# INTEN_STEPS = 200
+# INTEN_MIN = 0.001
+# INTEN_MAX = 52
+INTEN817 = 2 * kWpercm2  # np.linspace(INTEN_MIN, INTEN_MAX, INTEN_STEPS) * kWpercm2
 
 # Generate Hamiltonians
 H0 = operators.hyperfine_ham(mol)
 Hz = operators.zeeman_ham(mol)
-Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=np.pi/30)
-Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=np.pi/20)
+Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=0)
+Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=0)
 
 # Overall Hamiltonian
-Htot = H0 + Hz * B + Hac1065 * INTEN1065 + Hac817 * INTEN817[:, None, None]
+Htot = H0 + Hz * B + Hac1065 * INTEN1065[:, None, None] + Hac817 * (-mol.a02[1065][1]/mol.a02[817][1]) * INTEN1065[:, None, None]
 
 print(-mol.a02[1065][1]/mol.a02[817][1])
 
@@ -84,7 +84,7 @@ for i in range(32, 128):
     eigenergy = eigenergies[:, i] - eigenergies[:, rovibgroundstate]
     eiglabel = eiglabels[i]
 
-    ax.plot(INTEN817 / kWpercm2, eigenergy / MHz, c="k", alpha=0.1)
+    ax.plot(INTEN1065 / kWpercm2, eigenergy / MHz, c="k", alpha=0.1)
     if eiglabel[1] == 4 or eiglabel[1] == 5 or eiglabel[1] == 6:
         pol_index = eiglabel[1] - 5
         c_plot = c[pol_index]
@@ -102,7 +102,7 @@ for i in range(32, 128):
         colors[:, 3] = alpha_values
         plotting.colorline(
             ax,
-            INTEN817 / kWpercm2,
+            INTEN1065 / kWpercm2,
             eigenergy / MHz,
             colors,
             linewidth=1.5,

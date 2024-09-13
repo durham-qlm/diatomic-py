@@ -44,13 +44,13 @@ INTEN817 = np.linspace(INTEN_MIN, INTEN_MAX, INTEN_STEPS) * kWpercm2
 # Generate Hamiltonians
 H0 = operators.hyperfine_ham(mol)
 Hz = operators.zeeman_ham(mol)
-Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=np.pi/30)
-Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=np.pi/20)
+Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=np.pi / 30)
+Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=np.pi / 20)
 
 # Overall Hamiltonian
 Htot = H0 + Hz * B + Hac1065 * INTEN1065 + Hac817 * INTEN817[:, None, None]
 
-print(-mol.a02[1065][1]/mol.a02[817][1])
+print(-mol.a02[1065][1] / mol.a02[817][1])
 
 # Solve (diagonalise) Hamiltonians
 eigenergies, eigstates = calculate.solve_system(Htot)

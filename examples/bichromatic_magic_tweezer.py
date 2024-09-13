@@ -48,9 +48,14 @@ Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=0)
 Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=0)
 
 # Overall Hamiltonian
-Htot = H0 + Hz * B + Hac1065 * INTEN1065[:, None, None] + Hac817 * (-mol.a02[1065][1]/mol.a02[817][1]) * INTEN1065[:, None, None]
+Htot = (
+    H0
+    + Hz * B
+    + Hac1065 * INTEN1065[:, None, None]
+    + Hac817 * (-mol.a02[1065][1] / mol.a02[817][1]) * INTEN1065[:, None, None]
+)
 
-print(-mol.a02[1065][1]/mol.a02[817][1])
+print(-mol.a02[1065][1] / mol.a02[817][1])
 
 # Solve (diagonalise) Hamiltonians
 eigenergies, eigstates = calculate.solve_system(Htot)

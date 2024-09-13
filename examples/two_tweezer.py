@@ -23,7 +23,7 @@ kWpercm2 = 1e7
 # Set logging
 diatomic.configure_logging()
 
-fig, ((axul,axur),(axdl,axdr)) = plt.subplots(2,2, constrained_layout=True)
+fig, ((axul, axur), (axdl, axdr)) = plt.subplots(2, 2, constrained_layout=True)
 
 # Generate Molecule
 mol = SingletSigmaMolecule.from_preset("Rb87Cs133")
@@ -40,8 +40,8 @@ INTEN1065 = np.linspace(INTEN_MIN_1065, INTEN_MAX_1065, INTEN_STEPS_1065) * kWpe
 # Generate Hamiltonians
 H0 = operators.hyperfine_ham(mol)
 Hz = operators.zeeman_ham(mol)
-Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=np.pi/40)
-Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=np.pi/50)
+Hac1065 = operators.ac_ham(mol, a02=mol.a02[1065], beta=np.pi / 40)
+Hac817 = operators.ac_ham(mol, a02=mol.a02[817], beta=np.pi / 50)
 
 # Overall Hamiltonian
 Htot = H0 + Hz * B + Hac1065 * INTEN1065[:, None, None]
@@ -102,7 +102,7 @@ for i in range(32, 128):
 
         # ax.plot(INTEN817/ kWpercm2, eigenergy / MHz, c=c_plot, alpha=1)
 
-for i in range(0,32):
+for i in range(0, 32):
     eigenergy = eigenergies[:, i]
     eiglabel = eiglabels[i]
 
@@ -117,12 +117,15 @@ INTEN_MIN_817 = 0.001
 INTEN_MAX_817 = 50
 INTEN817 = np.linspace(INTEN_MIN_817, INTEN_MAX_817, INTEN_STEPS_817) * kWpercm2
 
-Htot = H0 + Hz * B + Hac1065 * INTEN_MAX_1065*kWpercm2 + Hac817 * INTEN817[:, None, None]
+Htot = (
+    H0 + Hz * B + Hac1065 * INTEN_MAX_1065 * kWpercm2 + Hac817 * INTEN817[:, None, None]
+)
 
 # Solve (diagonalise) Hamiltonians
 eigenergies, eigstates = calculate.solve_system(Htot)
 
 eiglabels = calculate.label_states(mol, eigstates[0], ["N", "MF"], index_repeats=True)
+
 
 def label_to_indices(labels, N, MF):
     labels = np.asarray(labels)
@@ -142,16 +145,26 @@ sigma_minus_coupling = calculate.transition_electric_moments(
     mol, eigstates, -1, from_states=[rovibgroundstate]
 )
 
-bicromatic_817 = -mol.a02[1065][1]/mol.a02[817][1]*INTEN_MAX_1065
+bicromatic_817 = -mol.a02[1065][1] / mol.a02[817][1] * INTEN_MAX_1065
 axins = axur.inset_axes(
     [0.05, 0.6, 0.4, 0.38],
-    xlim=(bicromatic_817-3, bicromatic_817+3), ylim=(974.3, 975.4), xticklabels=[], yticklabels=[])
+    xlim=(bicromatic_817 - 3, bicromatic_817 + 3),
+    ylim=(974.3, 975.4),
+    xticklabels=[],
+    yticklabels=[],
+)
 
 axinsbicromatic = axur.inset_axes(
     [0.55, 0.6, 0.4, 0.38],
-    xlim=(bicromatic_817-3, bicromatic_817+3), ylim=(974.3, 975.4), xticklabels=[], yticklabels=[])
+    xlim=(bicromatic_817 - 3, bicromatic_817 + 3),
+    ylim=(974.3, 975.4),
+    xticklabels=[],
+    yticklabels=[],
+)
 
-axinsbicromatic.set_xlabel(r"$I_{817} = -\frac{\alpha^{1065}_2}{\alpha^{817}_2} I_{1065}$")
+axinsbicromatic.set_xlabel(
+    r"$I_{817} = -\frac{\alpha^{1065}_2}{\alpha^{817}_2} I_{1065}$"
+)
 
 for ax in (axur, axins):
     c = ("blue", "red", "green")
@@ -186,7 +199,7 @@ for ax in (axur, axins):
 
             # ax.plot(INTEN817/ kWpercm2, eigenergy / MHz, c=c_plot, alpha=1)
 
-for i in range(0,32):
+for i in range(0, 32):
     eigenergy = eigenergies[:, i]
     eiglabel = eiglabels[i]
 
@@ -197,13 +210,19 @@ for i in range(0,32):
 
 
 ############
-        
-Htot = H0 + Hz * B + Hac817 * INTEN817[:, None, None] + Hac1065 * -mol.a02[817][1]/mol.a02[1065][1] * INTEN817[:,None,None]
+
+Htot = (
+    H0
+    + Hz * B
+    + Hac817 * INTEN817[:, None, None]
+    + Hac1065 * -mol.a02[817][1] / mol.a02[1065][1] * INTEN817[:, None, None]
+)
 
 # Solve (diagonalise) Hamiltonians
 eigenergies, eigstates = calculate.solve_system(Htot)
 
 eiglabels = calculate.label_states(mol, eigstates[0], ["N", "MF"], index_repeats=True)
+
 
 def label_to_indices(labels, N, MF):
     labels = np.asarray(labels)
@@ -214,13 +233,13 @@ def label_to_indices(labels, N, MF):
 rovibgroundstate = label_to_indices(eiglabels, 0, 5)[0]
 
 pi_coupling = calculate.transition_electric_moments(
-mol, eigstates, 0, from_states=[rovibgroundstate]
+    mol, eigstates, 0, from_states=[rovibgroundstate]
 )
 sigma_plus_coupling = calculate.transition_electric_moments(
-mol, eigstates, +1, from_states=[rovibgroundstate]
+    mol, eigstates, +1, from_states=[rovibgroundstate]
 )
 sigma_minus_coupling = calculate.transition_electric_moments(
-mol, eigstates, -1, from_states=[rovibgroundstate]
+    mol, eigstates, -1, from_states=[rovibgroundstate]
 )
 
 c = ("blue", "red", "green")
@@ -254,27 +273,26 @@ for i in range(32, 128):
         )
 
 
-
 axul.set_ylabel("$E/h$ (MHz)")
 axdl.set_xlabel("1065nm Intensity ($kW/cm^2$)")
 axdr.set_xlabel("817nm Intensity ($kW/cm^2$)")
 
-axul.set_ylim(973,981.5)
-axur.set_ylim(973,981.5)
+axul.set_ylim(973, 981.5)
+axur.set_ylim(973, 981.5)
 
-axdl.set_ylim(-6.5,1)
-axdr.set_ylim(-6.5,1)
+axdl.set_ylim(-6.5, 1)
+axdr.set_ylim(-6.5, 1)
 
-axul.set_xlim(0,50)
-axur.set_xlim(0,50)
+axul.set_xlim(0, 50)
+axur.set_xlim(0, 50)
 
-axdl.set_xlim(0,50)
-axdr.set_xlim(0,50)
+axdl.set_xlim(0, 50)
+axdr.set_xlim(0, 50)
 
-axur.axvline(bicromatic_817, c='k', linestyle='--')
-axdr.axvline(bicromatic_817, c='k', linestyle='--')
-axins.axvline(bicromatic_817, c='k', linestyle='--')
-axinsbicromatic.axvline(bicromatic_817, c='k', linestyle='--')
+axur.axvline(bicromatic_817, c="k", linestyle="--")
+axdr.axvline(bicromatic_817, c="k", linestyle="--")
+axins.axvline(bicromatic_817, c="k", linestyle="--")
+axinsbicromatic.axvline(bicromatic_817, c="k", linestyle="--")
 
 axur.set_yticks([])
 axdr.set_yticks([])

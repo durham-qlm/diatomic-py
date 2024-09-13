@@ -41,9 +41,7 @@ def solve_system(hamiltonians, num_diagonals=None):
         )
         return eigenenergies, eigenstates
     else:
-        raise ValueError(
-            "Incorrect dimensionality"
-        )
+        raise ValueError("Incorrect dimensionality")
 
 
 def _matrix_prod_diagonal(A, B, d=0):
@@ -96,7 +94,7 @@ def sort_smooth(eigvals, eigvecs, num_diagonals=None):
 
     param_step_counts = eigvecs.shape[0:-2]
     n_params = len(param_step_counts)
-    #loop over each parameter dimension
+    # loop over each parameter dimension
     for param_index in range(n_params):
         param_step_count = eigvecs.shape[param_index]
         basis_size = eigvecs.shape[-2]
@@ -123,21 +121,25 @@ def sort_smooth(eigvals, eigvecs, num_diagonals=None):
                 k, k - eigstate_count, -1
             )
         else:
-            overlap_matrices = np.abs(eigvecs[:-1].swapaxes(-1, -2) @ eigvecs[1:].conj())
+            overlap_matrices = np.abs(
+                eigvecs[:-1].swapaxes(-1, -2) @ eigvecs[1:].conj()
+            )
             best_overlaps = np.argmax(overlap_matrices, axis=1)
 
         # Cumulative permutations
-        integrated_permutations = np.empty((param_step_count, eigstate_count), dtype=int)
+        integrated_permutations = np.empty(
+            (param_step_count, eigstate_count), dtype=int
+        )
         integrated_permutations[-1] = np.arange(eigstate_count)
 
         for i in range(param_step_count - 2, -1, -1):
-            integrated_permutations[i] = best_overlaps[i][integrated_permutations[i + 1]]
+            integrated_permutations[i] = best_overlaps[i][
+                integrated_permutations[i + 1]
+            ]
 
         # Rearrange to maintain continuity
         # sorted_eigvals = eigvals[
-        eigvals = eigvals[
-            np.arange(param_step_count)[:, None], integrated_permutations
-        ]
+        eigvals = eigvals[np.arange(param_step_count)[:, None], integrated_permutations]
         # sorted_eigvecs = eigvecs[
         eigvecs = eigvecs[
             np.arange(param_step_count)[:, None, None],

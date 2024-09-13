@@ -497,7 +497,7 @@ def T2_C(Nmax, I1, I2):
                     ((-1) ** MN)
                     * np.sqrt((2 * N + 1) * (2 * Np + 1))
                     * wigner_3j(N, 2, Np, 0, 0, 0)
-                    * wigner_3j(N, 2, Np, -MN, q, MNp)
+                    * wigner_3j(N, 2, Np, float(-MN), q, float(MNp))
                 )
 
     # Expand into full Hyperfine basis
@@ -587,7 +587,7 @@ def unit_dipole_operator(Nmax, h):
             dmat[i, j] = (
                 (-1) ** M1
                 * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
-                * wigner_3j(N1, 1, N2, -M1, h, M2)
+                * wigner_3j(N1, 1, N2, float(-M1), h, float(M2))
                 * wigner_3j(N1, 1, N2, 0, 0, 0)
             )
 
@@ -640,7 +640,7 @@ def electric_gradient(Nmax):
                 T[n][i, j] = (
                     (-1) ** M1
                     * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
-                    * wigner_3j(N1, 2, N2, -M1, q, M2)
+                    * wigner_3j(N1, 2, N2, float(-M1), q, float(M2))
                     * wigner_3j(N1, 2, N2, 0, 0, 0)
                 )
 
@@ -694,8 +694,10 @@ def quad_moment(I_nuc):
             for n, q in enumerate(range(-2, 2 + 1)):
                 T[n][i, j] = (
                     (-1) ** int(I_nuc - M1)
-                    * wigner_3j(I_nuc, 2, I_nuc, -M1, q, M2)
-                    / wigner_3j(I_nuc, 2, I_nuc, -I_nuc, 0, I_nuc)
+                    * wigner_3j(float(I_nuc), 2, float(I_nuc), float(-M1), q, float(M2))
+                    / wigner_3j(
+                        float(I_nuc), 2, float(I_nuc), float(-I_nuc), 0, float(I_nuc)
+                    )
                 )
 
     return T
@@ -898,15 +900,64 @@ def unit_ac_aniso(Nmax, I1, I2, Beta):
     for i, (N1, M1) in enumerate(sph_iter(Nmax)):
         for j, (N2, M2) in enumerate(sph_iter(Nmax)):
             M = M2 - M1
-            HAC[i, j] = -1 * (
+            HAC[i, j] += -1 * (
                 wigner_D(2, M, 0, Beta, 0)
                 * (-1) ** M2
                 * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
-                * wigner_3j(N2, 2, N1, -M2, M, M1)
+                * wigner_3j(N2, 2, N1, float(-M2), float(M), float(M1))
                 * wigner_3j(N2, 2, N1, 0, 0, 0)
             )
 
     HAC[np.isnan(HAC)] = 0
+
+    HAC_expanded = np.kron(HAC, np.identity(num_proj(I1) * num_proj(I2)))
+    # return the matrix, in the full uncoupled basis.
+    return (1.0 / (2 * scipy.constants.epsilon_0 * scipy.constants.c)) * HAC_expanded
+
+
+def unit_ac_aniso_eliptical(Nmax, I1, I2, Gamma, Beta):
+    """Calculate anisotropic ac stark shift.
+
+    Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
+    like molecule.
+
+    This term is calculated differently to all of the others in this work
+    and is based off Jesus Aldegunde's FORTRAN 77 code. It iterates over
+    N,MN,N',MN' to build a matrix without hyperfine structure then uses
+    kronecker products to expand it into all of the hyperfine states.
+
+    Args:
+
+        Nmax (int) - maximum rotational quantum number to calculate
+        I1,I2 (float) - Nuclear spin of nucleus 1,2
+        Gamma (float) - Jones Vector Direction
+        Beta (float) - Jones Vector Elipticity
+
+    Returns:
+        H (np.ndarray): Hamiltonian in joules
+    """
+
+    prefactors_2 = [
+        (1 / 4) * np.sqrt(1) * (1 + 3 * np.cos(2 * Gamma)),
+        (3j / 4) * np.sqrt(2 / (3)) * (np.cos(Beta) * np.sin(2 * Gamma)),
+        (-3 / 4) * np.sqrt(2 / (3)) * (np.sin(Gamma) ** 2),
+    ]
+
+    matrix_width = num_proj_with_below(Nmax)
+    HAC = np.zeros((matrix_width, matrix_width), dtype=complex)
+    for i, (N1, M1) in enumerate(sph_iter(Nmax)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmax)):
+            for M in range(-2, 2 + 1, 1):
+                HAC[i, j] += (
+                    prefactors_2[abs(M)]
+                    * -1
+                    * (
+                        (-1) ** M2
+                        * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
+                        * wigner_3j(N2, 2, N1, 0, 0, 0)
+                        * wigner_3j(N2, 2, N1, float(-M2), M, float(M1))
+                    )
+                )
 
     HAC_expanded = np.kron(HAC, np.identity(num_proj(I1) * num_proj(I2)))
     # return the matrix, in the full uncoupled basis.

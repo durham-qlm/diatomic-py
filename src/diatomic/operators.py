@@ -497,7 +497,7 @@ def T2_C(Nmax, I1, I2):
                     ((-1) ** MN)
                     * np.sqrt((2 * N + 1) * (2 * Np + 1))
                     * wigner_3j(N, 2, Np, 0, 0, 0)
-                    * wigner_3j(N, 2, Np, -MN, q, MNp)
+                    * wigner_3j(N, 2, Np, float(-MN), q, float(MNp))
                 )
 
     # Expand into full Hyperfine basis
@@ -587,7 +587,7 @@ def unit_dipole_operator(Nmax, h):
             dmat[i, j] = (
                 (-1) ** M1
                 * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
-                * wigner_3j(N1, 1, N2, -M1, h, M2)
+                * wigner_3j(N1, 1, N2, float(-M1), h, float(M2))
                 * wigner_3j(N1, 1, N2, 0, 0, 0)
             )
 
@@ -640,7 +640,7 @@ def electric_gradient(Nmax):
                 T[n][i, j] = (
                     (-1) ** M1
                     * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
-                    * wigner_3j(N1, 2, N2, -M1, q, M2)
+                    * wigner_3j(N1, 2, N2, float(-M1), q, float(M2))
                     * wigner_3j(N1, 2, N2, 0, 0, 0)
                 )
 
@@ -694,8 +694,10 @@ def quad_moment(I_nuc):
             for n, q in enumerate(range(-2, 2 + 1)):
                 T[n][i, j] = (
                     (-1) ** int(I_nuc - M1)
-                    * wigner_3j(I_nuc, 2, I_nuc, -M1, q, M2)
-                    / wigner_3j(I_nuc, 2, I_nuc, -I_nuc, 0, I_nuc)
+                    * wigner_3j(float(I_nuc), 2, float(I_nuc), float(-M1), q, float(M2))
+                    / wigner_3j(
+                        float(I_nuc), 2, float(I_nuc), float(-I_nuc), 0, float(I_nuc)
+                    )
                 )
 
     return T
@@ -902,7 +904,7 @@ def unit_ac_aniso(Nmax, I1, I2, Beta):
                 wigner_D(2, M, 0, Beta, 0)
                 * (-1) ** M2
                 * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
-                * wigner_3j(N2, 2, N1, -M2, M, M1)
+                * wigner_3j(N2, 2, N1, float(-M2), float(M), float(M1))
                 * wigner_3j(N2, 2, N1, 0, 0, 0)
             )
 

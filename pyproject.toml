@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "diatomic-py"
-version = "2.0.0"
+version = "2.0.1"
 description = "A package for calculating rotational and hyperfine structure of singlet diatomic molecules."
 readme = "README.rst"
 license = {file = "LICENSE"}

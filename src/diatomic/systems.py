@@ -120,6 +120,10 @@ class SingletSigmaMolecule:
                     1825 * 4 * pi * eps0 * bohr**3,
                     1981 * 4 * pi * eps0 * bohr**3,
                 ),
+                1013: (
+                    2000 * 4 * pi * eps0 * bohr**3,
+                    1500 * 4 * pi * eps0 * bohr**3,
+                ),
                 817: (
                     443 * 4 * pi * eps0 * bohr**3,
                     -2816 * 4 * pi * eps0 * bohr**3,

@@ -915,6 +915,51 @@ def unit_ac_aniso(Nmax, I1, I2, Beta):
     return (1.0 / (2 * scipy.constants.epsilon_0 * scipy.constants.c)) * HAC_expanded
 
 
+def convert_poincare_to_jones(chi, phi):
+    pass
+
+
+def unit_ac_aniso_ellip(Nmax, I1, I2, omega, gamma, delta):
+    prefactors_2 = -np.sqrt(3 / 8) * np.array(
+        [
+            np.cos(omega) ** 2 * np.cos(gamma) ** 2
+            - np.sin(gamma) ** 2
+            - 1j * np.cos(omega) * np.cos(delta) * np.sin(2 * gamma),
+            np.cos(delta) * np.sin(omega) * np.sin(2 * gamma)
+            + 1j * np.cos(gamma) ** 2 * np.sin(2 * omega),
+            np.sqrt(2 / 3) * (1 - 3 * np.cos(gamma) ** 2 * np.sin(omega) ** 2),
+            -np.cos(delta) * np.sin(omega) * np.sin(2 * gamma)
+            + 1j * np.cos(gamma) ** 2 * np.sin(2 * omega),
+            np.cos(omega) ** 2 * np.cos(gamma) ** 2
+            - np.sin(gamma) ** 2
+            + 1j * np.cos(omega) * np.cos(delta) * np.sin(2 * gamma),
+        ]
+    )
+
+    matrix_width = num_proj_with_below(Nmax)
+    HAC = np.zeros((matrix_width, matrix_width), dtype=complex)
+    # For each state pair
+    for i, (N1, M1) in enumerate(sph_iter(Nmax)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmax)):
+            for M in range(-2, 2 + 1, 1):
+                HAC[i, j] += (
+                    prefactors_2[M + 2]
+                    * -1
+                    * (
+                        (-1) ** M2
+                        * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
+                        # Note the absence of the sqrt(5/(4pi)) here,
+                        # it's absorbed in consts above.
+                        * wigner_3j(N2, 2, N1, 0, 0, 0)
+                        * wigner_3j(N2, 2, N1, float(-M2), M, float(M1))
+                    )
+                )
+
+    HAC_expanded = np.kron(HAC, np.identity(num_proj(I1) * num_proj(I2)))
+    # return the matrix, in the full uncoupled basis.
+    return (1.0 / (2 * scipy.constants.epsilon_0 * scipy.constants.c)) * HAC_expanded
+
+
 # Now some functions to take these functions and assemble them into the physical
 # Hamiltonians where necessary.
 
@@ -1014,4 +1059,29 @@ def ac_ham(mol, a02, beta=0):
     Hac = a02[0] * unit_ac_iso(mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[1] * unit_ac_aniso(
         mol.Nmax, mol.Ii[0], mol.Ii[1], beta
     )
+    return Hac
+
+
+@log_time
+def ac_ham_ellip(mol, a02, omega, gamma, delta):
+    """
+    Computes the AC Stark shift Hamiltonian for a molecule in an oscillating electric
+    field.
+
+    The function combines the isotropic and anisotropic AC Stark shifts to obtain the
+    total AC Stark Hamiltonian, considering the polarization of the electric field.
+
+    Args:
+        mol: A molecule object containing the necessary attributes for calculation.
+        a02 (tuple): A two-element tuple containing the isotropic and anisotropic
+            polarizabilities.
+        beta (float, optional): The polarization angle of the electric field.
+            Defaults to 0.
+
+    Returns:
+        np.ndarray: The AC Stark shift Hamiltonian matrix.
+    """
+    Hac = a02[0] * unit_ac_iso(mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[
+        1
+    ] * unit_ac_aniso_ellip(mol.Nmax, mol.Ii[0], mol.Ii[1], omega, gamma, delta)
     return Hac

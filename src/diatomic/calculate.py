@@ -228,7 +228,7 @@ def label_states(mol, eigstates, labels, index_repeats=False):
             quantum numbers for each eigenstate, and each column corresponds to a label.
     """
 
-    N_op, I1_op, I2_op = operators.generate_vecs(mol.Nmax, mol.Ii[0], mol.Ii[1])
+    N_op, I1_op, I2_op = operators.generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
 
     out_labels = []
 

@@ -19,6 +19,7 @@ class SingletSigmaMolecule:
     def __init__(
         self,
         Ii: tuple[int | HalfInt, int | HalfInt] = (0, 0),
+        Nmin: int = 0,
         Nmax: int = 1,
         Brot: float = 1e9 * h,
         Drot: float = 0.0,
@@ -34,7 +35,8 @@ class SingletSigmaMolecule:
         # Nuclear Spin magnitudes
         self.Ii = Ii
 
-        # Maximum rotational basis components considered
+        # rotational basis components considered
+        self.Nmin = Nmin
         self.Nmax = Nmax
 
         # Rotational Constants

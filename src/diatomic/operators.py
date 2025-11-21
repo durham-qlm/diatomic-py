@@ -150,12 +150,13 @@ def proj_iter(angmom):
     # return (HalfInt(double=dm) for dm in range(-2 * angmom, 2 * angmom + 1, 2))
 
 
-def sph_iter(Nmax):
+def sph_iter(Nmin, Nmax):
     """
     Generator function that yields tuples of spherical harmonic angular momentum
     quantum numbers up to a specified maximum angular momentum Nmax.
 
     Args:
+        Nmin (int): minimum rotational quantum number (inclusive).
         Nmax (int): The maximum (inclusive) angular momentum quantum number to
             iterate up to.
 
@@ -164,10 +165,10 @@ def sph_iter(Nmax):
             quantum number (N) and the second element is the projection quantum number
             (MN) as yielded by the proj_iter function for that N.
     """
-    return ((N, MN) for N in range(0, Nmax + 1) for MN in proj_iter(N))
+    return ((N, MN) for N in range(Nmin, Nmax + 1) for MN in proj_iter(N))
 
 
-def uncoupled_basis_iter(Nmax, I1, I2):
+def uncoupled_basis_iter(Nmin, Nmax, I1, I2):
     """
     Generator function that yields a Cartesian product of tuples representing the
     uncoupled basis states  for two angular momenta up to a specified maximum angular
@@ -188,13 +189,13 @@ def uncoupled_basis_iter(Nmax, I1, I2):
     """
     return (
         (N, MN, M1, M2)
-        for (N, MN) in sph_iter(Nmax)
+        for (N, MN) in sph_iter(Nmin,Nmax)
         for M1 in proj_iter(I1)
         for M2 in proj_iter(I2)
     )
 
 
-def uncoupled_basis_pos(N, MN, MI1, MI2, I1, I2):
+def uncoupled_basis_pos(N, MN, MI1, MI2, I1, I2, Nmin):
     """
     Calculates the position (index) of a given uncoupled basis state in a linear array
     that would be produced by uncoupled_basis_iter.
@@ -215,19 +216,22 @@ def uncoupled_basis_pos(N, MN, MI1, MI2, I1, I2):
     Returns:
         int: The index position of the uncoupled basis state in a linear array.
     """
+    # Index of this (N,MN) within the list of all N,MN with N in [Nmin, Nmax]
+    N_block_index = N**2 + N - MN - Nmin**2
     return int(
-        (I2 - MI2) + (2 * I2 + 1) * ((I1 - MI1) + (2 * I1 + 1) * (N**2 + N - MN))
+        (I2 - MI2) 
+        + (2 * I2 + 1) * ((I1 - MI1) + (2 * I1 + 1) * N_block_index)
     )
 
 
-def num_proj_with_below(Nmax):
+def num_proj_with_below(Nmin, Nmax):
     """
     Calculates the total number of projection quantum numbers for all angular momentum
     quantum numbers from 0 up to a specified maximum value, Nmax.
 
     The function sums analyticalls the number of possible projections for each
     angular momentum quantum number, which follows the formula 2 * N + 1.
-    i.e. `sum([2 * x + 1 for x in range(0, Nmax + 1)])`
+    i.e. `sum 2n+1, n=a to b` 
 
     Args:
         Nmax (int): The maximum angular momentum quantum number to include in the sum.
@@ -237,7 +241,7 @@ def num_proj_with_below(Nmax):
             momentum 0 to Nmax.
     """
     # sum([2 * x + 1 for x in range(0, Nmax + 1)]) =
-    return int((Nmax + 1) ** 2)
+    return int((Nmax + 1) ** 2 - Nmin**2)
 
 
 def num_proj(angmom):
@@ -367,7 +371,7 @@ def z_operator(J):
     return 0.5 * (J_plus @ J_minus - J_minus @ J_plus)
 
 
-def generate_vecs(Nmax, I1, I2):
+def generate_vecs(Nmin, Nmax, I1, I2):
     """Build N, I1, I2 angular momentum vectors
 
     Generate the vectors of the angular momentum operators which we need
@@ -381,7 +385,7 @@ def generate_vecs(Nmax, I1, I2):
             (2Nmax+1)*(2I1+1)*(2I2+1) square np arrays
     """
 
-    shapeN = num_proj_with_below(Nmax)
+    shapeN = num_proj_with_below(Nmin,Nmax)
     shape1 = num_proj(I1)
     shape2 = num_proj(I2)
 
@@ -389,7 +393,7 @@ def generate_vecs(Nmax, I1, I2):
     Ny = np.array([[]])
     Nz = np.array([[]])
 
-    for n in range(0, Nmax + 1):
+    for n in range(Nmin, Nmax + 1):
         Nx = block_diag(Nx, x_operator(n))
         Ny = block_diag(Ny, y_operator(n))
         Nz = block_diag(Nz, z_operator(n))
@@ -473,7 +477,7 @@ def wigner_D(l, m, alpha, beta, gamma):  # noqa: E741
     return prefactor * function
 
 
-def T2_C(Nmax, I1, I2):
+def T2_C(Nmin,Nmax, I1, I2):
     """
     The irreducible spherical tensors for the spherical harmonics in the
     rotational basis.
@@ -486,12 +490,12 @@ def T2_C(Nmax, I1, I2):
         T (list of np.ndarray) : spherical tensor T^2(C). Each element is a
             spherical operator
     """
-    matrix_width = num_proj_with_below(Nmax)
+    matrix_width = num_proj_with_below(Nmin,Nmax)
 
     T = np.zeros((5, matrix_width, matrix_width))
 
-    for x, (N, MN) in enumerate(sph_iter(Nmax)):
-        for y, (Np, MNp) in enumerate(sph_iter(Nmax)):
+    for x, (N, MN) in enumerate(sph_iter(Nmin,Nmax)):
+        for y, (Np, MNp) in enumerate(sph_iter(Nmin,Nmax)):
             for i, q in enumerate(range(-2, 2 + 1)):
                 T[i][x, y] = (
                     ((-1) ** MN)
@@ -561,7 +565,7 @@ Molecular operators
 """
 
 
-def unit_dipole_operator(Nmax, h):
+def unit_dipole_operator(Nmin,Nmax, h):
     """
     Generates the induced dipole moment operator for a rigid rotor molecule in
     the spherical harmonic basis.
@@ -579,11 +583,11 @@ def unit_dipole_operator(Nmax, h):
         np.ndarray: The induced dipole moment matrix for transitions between
                     rotational states up to Nmax.
     """
-    matrix_width = num_proj_with_below(Nmax)
+    matrix_width = num_proj_with_below(Nmin,Nmax)
     dmat = np.zeros((matrix_width, matrix_width))
 
-    for i, (N1, M1) in enumerate(sph_iter(Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmin,Nmax)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmin,Nmax)):
             dmat[i, j] = (
                 (-1) ** M1
                 * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
@@ -609,7 +613,7 @@ def expanded_unit_dipole_operator(mol, h):
     Returns:
         np.ndarray: The expanded dipole operator matrix.
     """
-    dmat = unit_dipole_operator(mol.Nmax, h)
+    dmat = unit_dipole_operator(mol.Nmin,mol.Nmax, h)
 
     nuc_spin_identity = np.identity(num_proj(mol.Ii[0]) * num_proj(mol.Ii[1]))
     dmat_expanded = np.kron(dmat, nuc_spin_identity)
@@ -617,7 +621,7 @@ def expanded_unit_dipole_operator(mol, h):
     return dmat_expanded
 
 
-def electric_gradient(Nmax):
+def electric_gradient(Nmin,Nmax):
     """
     Calculates the electric field gradient at the nucleus for rotational states.
 
@@ -631,11 +635,11 @@ def electric_gradient(Nmax):
         list of np.ndarray: A length-5 list of arrays representing the electric field
                             gradient tensor components.
     """
-    matrix_width = num_proj_with_below(Nmax)
+    matrix_width = num_proj_with_below(Nmin,Nmax)
     T = np.zeros((5, matrix_width, matrix_width))
 
-    for i, (N1, M1) in enumerate(sph_iter(Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmin,Nmax)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmin,Nmax)):
             for n, q in enumerate(range(-2, 2 + 1)):
                 T[n][i, j] = (
                     (-1) ** M1
@@ -659,7 +663,7 @@ def expanded_electric_gradient(mol):
     Returns:
         np.ndarray: The expanded electric gradient tensor.
     """
-    elec_mat = electric_gradient(mol.Nmax)
+    elec_mat = electric_gradient(mol.Nmin, mol.Nmax)
 
     nuc_spin_basis_size = num_proj(mol.Ii[0]) * num_proj(mol.Ii[1])
     nuc_spin_identity = np.identity(nuc_spin_basis_size)
@@ -717,7 +721,7 @@ def expanded_quad_moment(mol, nucleus):
     T_nucleus = quad_moment(mol.Ii[nucleus])
 
     # Expand into full hyperfine basis
-    num_N_proj = num_proj_with_below(mol.Nmax)
+    num_N_proj = num_proj_with_below(mol.Nmin, mol.Nmax)
     nuc_spin_basis_size = num_proj(mol.Ii[0]) * num_proj(mol.Ii[1])
     expanded_matrix_width = num_N_proj * nuc_spin_basis_size
 
@@ -823,7 +827,7 @@ def scalar_nuclear(Ci, J1, J2):
     return Ci * vector_dot(J1, J2)
 
 
-def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmax):
+def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmin, Nmax):
     """Calculate the tensor spin-spin interaction.
 
     This function is to calculate the tensor spin-spin interaction.
@@ -840,7 +844,7 @@ def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmax):
     """
 
     # steps for maths, creates the spherical tensors
-    T1 = T2_C(Nmax, I1_val, I2_val)
+    T1 = T2_C(Nmin, Nmax, I1_val, I2_val)
     T2 = makeT2(I1_vec, I2_vec)
     # return final Hamiltonian
     tensorss = np.sqrt(6) * C3 * tensor_dot(T1, T2)
@@ -848,7 +852,7 @@ def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmax):
     return tensorss
 
 
-def unit_ac_iso(Nmax, I1, I2):
+def unit_ac_iso(Nmin,Nmax, I1, I2):
     """Calculate isotropic Stark shifts
 
     Generates the effect of the isotropic AC Stark shift for a rigid-rotor
@@ -867,14 +871,14 @@ def unit_ac_iso(Nmax, I1, I2):
         H (np.ndarray) - isotropic AC Stark Hamiltonian
 
     """
-    matrix_width = num_proj_with_below(Nmax) * num_proj(I1) * num_proj(I2)
+    matrix_width = num_proj_with_below(Nmin,Nmax) * num_proj(I1) * num_proj(I2)
     HAC = -1 * np.identity(matrix_width)
 
     # return the matrix, in the full uncoupled basis.
     return (1.0 / (2 * scipy.constants.epsilon_0 * scipy.constants.c)) * HAC
 
 
-def unit_ac_aniso(Nmax, I1, I2, Beta):
+def unit_ac_aniso(Nmin, Nmax, I1, I2, Beta):
     """Calculate anisotropic ac stark shift.
 
     Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
@@ -895,10 +899,10 @@ def unit_ac_aniso(Nmax, I1, I2, Beta):
         H (np.ndarray): Hamiltonian in joules
     """
 
-    matrix_width = num_proj_with_below(Nmax)
+    matrix_width = num_proj_with_below(Nmin,Nmax)
     HAC = np.zeros((matrix_width, matrix_width), dtype=complex)
-    for i, (N1, M1) in enumerate(sph_iter(Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmin,Nmax)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmin,Nmax)):
             M = M2 - M1
             HAC[i, j] = -1 * (
                 wigner_D(2, M, 0, Beta, 0)
@@ -919,7 +923,7 @@ def convert_poincare_to_jones(chi, phi):
     pass
 
 
-def unit_ac_aniso_ellip(Nmax, I1, I2, omega, gamma, delta):
+def unit_ac_aniso_ellip(Nmin, Nmax, I1, I2, omega, gamma, delta):
     prefactors_2 = -np.sqrt(3 / 8) * np.array(
         [
             np.cos(omega) ** 2 * np.cos(gamma) ** 2
@@ -936,11 +940,11 @@ def unit_ac_aniso_ellip(Nmax, I1, I2, omega, gamma, delta):
         ]
     )
 
-    matrix_width = num_proj_with_below(Nmax)
+    matrix_width = num_proj_with_below(Nmin, Nmax)
     HAC = np.zeros((matrix_width, matrix_width), dtype=complex)
     # For each state pair
-    for i, (N1, M1) in enumerate(sph_iter(Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmin, Nmax)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmin, Nmax)):
             for M in range(-2, 2 + 1, 1):
                 HAC[i, j] += (
                     prefactors_2[M + 2]
@@ -978,14 +982,14 @@ def hyperfine_ham(mol):
     Returns:
         H0 : Hamiltonian for the hyperfine structure in joules
     """
-    N, I1, I2 = generate_vecs(mol.Nmax, mol.Ii[0], mol.Ii[1])
+    N, I1, I2 = generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
     rotational_part = rotational(N, mol.Brot, mol.Drot)
     scalar_part = (
         scalar_nuclear(mol.Ci[0], N, I1)
         + scalar_nuclear(mol.Ci[1], N, I2)
         + scalar_nuclear(mol.C4, I1, I2)
     )
-    tensor_nuclear_part = tensor_nuclear(mol.C3, I1, I2, mol.Ii[0], mol.Ii[1], mol.Nmax)
+    tensor_nuclear_part = tensor_nuclear(mol.C3, I1, I2, mol.Ii[0], mol.Ii[1], mol.Nmin, mol.Nmax)
     quadrupole_part = quadrupole(mol)
     H = rotational_part + scalar_part + tensor_nuclear_part + quadrupole_part
     return H
@@ -1032,7 +1036,7 @@ def zeeman_ham(mol):
     Returns:
         Hz (np.ndarray): Hamiltonian for the zeeman effect
     """
-    N, I1, I2 = generate_vecs(mol.Nmax, mol.Ii[0], mol.Ii[1])
+    N, I1, I2 = generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
     H = zeeman(mol.Mui[0], I1) + zeeman(mol.Mui[1], I2) + zeeman(mol.MuN, N)
     return H
 
@@ -1056,8 +1060,8 @@ def ac_ham(mol, a02, beta=0):
     Returns:
         np.ndarray: The AC Stark shift Hamiltonian matrix.
     """
-    Hac = a02[0] * unit_ac_iso(mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[1] * unit_ac_aniso(
-        mol.Nmax, mol.Ii[0], mol.Ii[1], beta
+    Hac = a02[0] * unit_ac_iso(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[1] * unit_ac_aniso(
+        mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1], beta
     )
     return Hac
 
@@ -1081,7 +1085,7 @@ def ac_ham_ellip(mol, a02, omega, gamma, delta):
     Returns:
         np.ndarray: The AC Stark shift Hamiltonian matrix.
     """
-    Hac = a02[0] * unit_ac_iso(mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[
+    Hac = a02[0] * unit_ac_iso(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[
         1
-    ] * unit_ac_aniso_ellip(mol.Nmax, mol.Ii[0], mol.Ii[1], omega, gamma, delta)
+    ] * unit_ac_aniso_ellip(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1], omega, gamma, delta)
     return Hac

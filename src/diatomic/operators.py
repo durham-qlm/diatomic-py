@@ -260,6 +260,69 @@ def num_proj(angmom):
     return int(2 * angmom + 1)
 
 
+
+def proj_iter_bounded(j, mmin=None, mmax=None):
+    """
+    Like proj_iter(j) but restricted to m in [mmin, mmax] (inclusive),
+    intersected with the physical range [-j, +j]. Works for int/HalfInt/float j.
+    """
+    twoj = int(2 * j)
+
+    twomin = -twoj if mmin is None else int(2 * mmin)
+    twomax =  twoj if mmax is None else int(2 * mmax)
+
+    twomin = max(twomin, -twoj)
+    twomax = min(twomax,  twoj)
+
+    if twomax < twomin:
+        return iter(())  # empty
+
+    # step -2 in "double units" keeps integer/half-integer parity correct
+    return (HalfInt(of=dm) for dm in range(twomax, twomin - 1, -2))
+
+
+def mn_crop_indices(Nmin, Nmax, I1, I2, MNmin=None, MNmax=None):
+    """
+    Indices to keep from the *full* uncoupled basis ordered as:
+      for (N,MN) in sph_iter(Nmin,Nmax): for M1 in proj_iter(I1): for M2 in proj_iter(I2)
+
+    Returns a 1D int array of basis indices corresponding to MN in [MNmin, MNmax].
+    If MNmin and MNmax are both None, returns None (meaning "keep everything").
+    """
+    if MNmin is None and MNmax is None:
+        return None
+
+    dim_nuc = num_proj(I1) * num_proj(I2)
+    idx = []
+
+    # rotational ordering matches your sph_iter: N increasing, MN from +N down to -N
+    for N in range(Nmin, Nmax + 1):
+        for MN in proj_iter_bounded(N, MNmin, MNmax):
+            MN_int = int(MN)  # for integer N, MN is integer anyway
+            # rotational index within the full (N,MN) list from Nmin..Nmax:
+            rot_index = N * N + N - MN_int - (Nmin * Nmin)
+
+            start = rot_index * dim_nuc
+            idx.extend(range(start, start + dim_nuc))
+
+    return np.asarray(idx, dtype=int)
+
+
+def crop_by_indices(op, indices):
+    """
+    Crop any operator/Hamiltonian in the *full* uncoupled basis to the MN-restricted subspace.
+
+    op: array-like of shape (..., N, N)
+    returns: ndarray of shape (..., N', N')
+    """
+    if indices is None:
+        return op
+
+    if op.shape[-1] != op.shape[-2]:
+        raise ValueError(f"Expected op to be square on last two axes, got {op.shape[-2:]}")
+
+    return op[..., indices, :][..., :, indices]
+
 def vector_dot(A, B):
     """Cartesian dot product of two vectors of (matrix) operators A, B
 

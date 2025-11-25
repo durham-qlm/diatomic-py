@@ -198,7 +198,7 @@ def _solve_quadratic(a, b, c):
 
 
 @log_time
-def label_states(mol, eigstates, labels, index_repeats=False):
+def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
     """
     Labels the eigenstates of a molecule with quantum numbers corresponding to
     specified labels. The returned numbers will only be good if the state is
@@ -228,8 +228,35 @@ def label_states(mol, eigstates, labels, index_repeats=False):
             quantum numbers for each eigenstate, and each column corresponds to a label.
     """
 
-    N_op, I1_op, I2_op = operators.generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
+    eigstates = np.asarray(eigstates)
+    if eigstates.ndim == 1:
+        eigstates = eigstates[:, None]  # treat as one eigenvector (column)
 
+    N_op, I1_op, I2_op = operators.generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
+    full_dim = N_op.shape[-1]
+    vec_dim = eigstates.shape[0]
+
+    if basis_idx is None:
+        if vec_dim == full_dim:
+            basis_idx = None
+        else:
+            raise ValueError(
+                f"eigstates are dimension {vec_dim}, but full basis is {full_dim}. "
+                "Provide basis_idx so label_states can crop operators consistently."
+            )
+
+    if basis_idx is not None:
+        basis_idx = np.asarray(basis_idx, dtype=int)
+        if basis_idx.size != vec_dim:
+            raise ValueError(
+                f"basis_idx length {basis_idx.size} does not match eigstates dimension {vec_dim}."
+            )
+
+        # Crop operator vectors (shape (3,dim,dim))
+        N_op  = N_op[:, basis_idx, :][:, :, basis_idx]
+        I1_op = I1_op[:, basis_idx, :][:, :, basis_idx]
+        I2_op = I2_op[:, basis_idx, :][:, :, basis_idx]
+    
     out_labels = []
 
     for label in labels:

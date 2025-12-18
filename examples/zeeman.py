@@ -8,6 +8,7 @@ import diatomic.operators as operators
 import diatomic.calculate as calculate
 from diatomic.plotting import colorline
 
+
 GAUSS = 1e-4  # T
 MHz = scipy.constants.h * 1e6
 muN = scipy.constants.physical_constants["nuclear magneton"][0]
@@ -16,7 +17,7 @@ muN = scipy.constants.physical_constants["nuclear magneton"][0]
 diatomic.configure_logging()
 
 # Generate Molecule
-mol = SingletSigmaMolecule.from_preset("Rb87Cs133")
+mol = SingletSigmaMolecule.from_preset("Na23Cs133")
 mol.Nmax = 1
 
 # Generate Hamiltonians
@@ -39,7 +40,7 @@ eigenlabels = calculate.label_states(mol, eigenstates[-1], ["N", "MF"])
 
 magnetic_moments = calculate.magnetic_moment(mol, eigenstates)
 
-groundstate = 0
+groundstate = 1
 transition_sigma_plus = calculate.transition_electric_moments(
     mol, eigenstates[:, :, :], h=1, from_states=groundstate
 )
@@ -69,7 +70,7 @@ h = [transition_sigma_plus, transition_pi, transition_sigma_minus]
 for c, rgbi, transition_elements in zip(cs, rgbis, h):
     axdr.plot(
         B / GAUSS,
-        transition_elements[:, groundstate, :] / mol.d0,
+        transition_elements[:, 0, :] / mol.d0,
         c=c,
         lw=1,
         alpha=0.6,
@@ -78,7 +79,7 @@ for c, rgbi, transition_elements in zip(cs, rgbis, h):
     for eigindex in range(32, 128):
         colours = np.zeros((B.shape[0], 4))
         colours[:, rgbi] = 1
-        colours[:, 3] = transition_elements[:, groundstate, eigindex] / mol.d0
+        colours[:, 3] = transition_elements[:, 0, eigindex] / mol.d0
         colorline(axul, B / GAUSS, eigenenergies[:, eigindex] / MHz, colors=colours)
 
 axdl.plot(B / GAUSS, eigenenergies[:, groundstate] / MHz, c="red", lw=1, alpha=0.5)

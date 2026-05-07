@@ -195,7 +195,7 @@ class SingletSigmaMolecule:
             # https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.109.230403
             # All other parameters are from Aldegunde et al., PRA 96, 042506 (2017)
             # https://journals.aps.org/pra/abstract/10.1103/PhysRevA.96.042506
-            "Ii": (HalfInt(of=4), HalfInt(of=3)),
+            "Ii": (HalfInt(of=8), HalfInt(of=3)),
             "d0": 0.566 * DebyeSI,
             "Brot": 1113.950e6 * h,
             "Drot": 0 * h,
@@ -244,7 +244,7 @@ class SingletSigmaMolecule:
             # https://journals.aps.org/pra/abstract/10.1103/PhysRevA.96.042506
             "Ii": (HalfInt(of=3), HalfInt(of=7)),
             "d0": 4.53 * DebyeSI,  # Theory value
-            "Brot": 0.962e9 * h,
+            "Brot": 1.735616e9 * h,
             "Drot": 0 * h,
             "Qi": (-0.097e6 * h, 0.150e6 * h),
             "Ci": (14.2 * h, 854.5 * h),

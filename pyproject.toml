@@ -22,7 +22,10 @@ requires-python = ">=3.10"
 dependencies = [
   "numpy",
   "sympy",
-  "scipy<=1.16.3"
+  "scipy<=1.16.3",
+  "tqdm>=4.67.3",
+  "ruff>=0.15.12",
+  "black>=26.3.1",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +35,9 @@ test = [
 plotting = [
   "matplotlib"
 ]
+progress = [
+  "tqdm"
+]
 docs = [
   "sphinx",
   "sphinx-book-theme"
@@ -39,6 +45,7 @@ docs = [
 dev = [
   "diatomic-py[test]",
   "diatomic-py[docs]",
+  "diatomic-py[progress]",
   "black",
   "pre-commit",
   "ruff",
@@ -46,3 +53,8 @@ dev = [
 
 [tool.ruff]
 src = ["src"]
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.10.9",
+]

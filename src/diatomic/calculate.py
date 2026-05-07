@@ -2,14 +2,15 @@ from diatomic import log_time
 import diatomic.operators as operators
 
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 import warnings
 
 
 @log_time
-def solve_system(hamiltonians, num_diagonals=None):
+def solve_system(hamiltonians, num_diagonals=None, progress=False, chunk_size=None):
     """
-    Solves for the eigenenergies and eigenstates of given Hamiltonian(s over 1
-    parameter).
+    Solves for the eigenenergies and eigenstates of given Hamiltonian(s) over one
+    parameter.
 
     This function diagonalizes the input Hamiltonian(s) to find the corresponding
     eigenenergies and eigenstates. It supports both single Hamiltonian and a set
@@ -22,9 +23,14 @@ def solve_system(hamiltonians, num_diagonals=None):
         hamiltonians (np.ndarray): A single Hamiltonian matrix or an array of
             Hamiltonian matrices.
         num_diagonals (int | None, optional): The number of local swaps above and below
-            to consider when smoothing eigenfunctions. Changing this to a number can
-            speed up smoothing calculations for large numbers of eigenstates. If None,
-            compare all eigenstates to all other eigenstates when smoothing (safest).
+            to consider when smoothing eigenfunctions. If None, compare all
+            eigenstates to all other eigenstates when smoothing (safest).
+        progress (bool, optional): If True, show a progress bar while diagonalising
+            scan-shaped Hamiltonians. Uses tqdm if available. Defaults to False.
+        chunk_size (int | None, optional): Number of Hamiltonians to diagonalise in
+            each batch when using chunked diagonalisation. If None, the original
+            fully batched diagonalisation is used unless progress=True, in which case
+            chunk_size defaults to 1 so the progress bar can update after each step.
 
     Returns:
         tuple: (eigenenergies, eigenstates).
@@ -32,10 +38,13 @@ def solve_system(hamiltonians, num_diagonals=None):
     Raises:
         ValueError: If the input Hamiltonian has more than three dimensions.
     """
-    eigenenergies_raw, eigenstates_raw = log_time(np.linalg.eigh)(hamiltonians)
     if hamiltonians.ndim == 2:
+        eigenenergies_raw, eigenstates_raw = log_time(np.linalg.eigh)(hamiltonians)
         return eigenenergies_raw, eigenstates_raw
     elif hamiltonians.ndim == 3:
+        eigenenergies_raw, eigenstates_raw = _diagonalize_scan(
+            hamiltonians, progress=progress, chunk_size=chunk_size
+        )
         eigenenergies, eigenstates = sort_smooth(
             eigenenergies_raw, eigenstates_raw, num_diagonals=num_diagonals
         )
@@ -45,6 +54,72 @@ def solve_system(hamiltonians, num_diagonals=None):
             "Too many dimensions, solve_system doesn't support smoothing"
             " eigenvalues over >1 parameters"
         )
+
+
+def _progress_iterator(iterable, progress=False, total=None, desc=None):
+    if not progress:
+        return iterable
+
+    try:
+        from tqdm.auto import tqdm
+    except ImportError:
+        warnings.warn(
+            "progress=True was requested, but tqdm is not installed. "
+            "Continuing without a progress bar.",
+            stacklevel=3,
+        )
+        return iterable
+
+    return tqdm(iterable, total=total, desc=desc)
+
+
+@log_time
+def _diagonalize_scan(hamiltonians, progress=False, chunk_size=None):
+    """
+    Diagonalise a scan of Hamiltonians, optionally in chunks for progress reporting.
+    """
+    if chunk_size is not None:
+        if (
+            isinstance(chunk_size, bool)
+            or not isinstance(chunk_size, (int, np.integer))
+            or chunk_size < 1
+        ):
+            raise ValueError("chunk_size must be a positive integer or None.")
+        chunk_size = int(chunk_size)
+
+    if chunk_size is None and not progress:
+        return np.linalg.eigh(hamiltonians)
+
+    step_count = hamiltonians.shape[0]
+    if step_count == 0:
+        return np.linalg.eigh(hamiltonians)
+
+    if chunk_size is None:
+        chunk_size = 1
+
+    chunk_starts = range(0, step_count, chunk_size)
+    chunk_count = (step_count + chunk_size - 1) // chunk_size
+
+    eigenenergies = None
+    eigenstates = None
+    for start in _progress_iterator(
+        chunk_starts, progress=progress, total=chunk_count, desc="Diagonalising"
+    ):
+        stop = min(start + chunk_size, step_count)
+        chunk_energies, chunk_states = np.linalg.eigh(hamiltonians[start:stop])
+
+        if eigenenergies is None:
+            eigenenergies = np.empty(
+                (step_count, chunk_energies.shape[-1]), dtype=chunk_energies.dtype
+            )
+            eigenstates = np.empty(
+                (step_count, *chunk_states.shape[-2:]), dtype=chunk_states.dtype
+            )
+
+        eigenenergies[start:stop] = chunk_energies
+        eigenstates[start:stop] = chunk_states
+
+    return eigenenergies, eigenstates
 
 
 def _matrix_prod_diagonal(A, B, d=0):
@@ -69,6 +144,25 @@ def _matrix_prod_diagonal(A, B, d=0):
     return diag
 
 
+def _overlap_permutation(overlap_matrix):
+    """
+    Return the previous-step index assigned to each current-step eigenstate.
+
+    The assignment is one-to-one, unlike taking an independent argmax for each
+    state. This prevents duplicated trajectories when overlap maxima are tied or
+    nearly degenerate.
+    """
+    # Maximise total overlap by minimising the negative overlap. Entries outside
+    # a restricted band are -inf, so give them a large finite cost for scipy.
+    cost_matrix = np.where(np.isfinite(overlap_matrix), -overlap_matrix, 1e12)
+    row_ind, col_ind = linear_sum_assignment(
+        cost_matrix
+    )  # Minimises cost of bipartite matching
+    permutation = np.empty(overlap_matrix.shape[1], dtype=int)
+    permutation[col_ind] = row_ind
+    return permutation
+
+
 @log_time
 def sort_smooth(eigvals, eigvecs, num_diagonals=None):
     """
@@ -82,9 +176,9 @@ def sort_smooth(eigvals, eigvecs, num_diagonals=None):
         eigvals (np.ndarray): Eigenvalues array with shape (steps, eigstate).
         eigvecs (np.ndarray): Eigenvectors array with shape (steps, basis, eigstate).
         num_diagonals (int | None, optional): The number of local swaps above and below
-            to consider when smoothing eigenfunctions. Changing this to a number can
-            speed up smoothing calculations for large numbers of eigenstates. If None,
-            compare all eigenstates to all other eigenstates when smoothing (safest).
+            to consider when smoothing eigenfunctions. Restricting this can reduce
+            work if eigenstates only swap locally in energy order. If None, compare
+            all eigenstates to all other eigenstates when smoothing (safest).
 
     Returns:
         tuple: The smoothed eigenvalues and eigenvectors.
@@ -99,10 +193,17 @@ def sort_smooth(eigvals, eigvecs, num_diagonals=None):
     basis_size = eigvecs.shape[1]
     eigstate_count = eigvecs.shape[2]
 
-    # Compute overlap matrix between (k)th and (k-1)th
+    # Compute overlap_matrices[step, i, j] is |<old_i | new_j>| between neighbouring
+    # parameter values. A large value means eigenstate j at step+1 is most like
+    # eigenstate i at step.
     if num_diagonals is not None:
         k = min(num_diagonals, eigstate_count - 1)
-        diagonals = np.zeros((param_step_count - 1, 2 * k + 1, eigstate_count))
+        overlap_matrices = np.full(
+            (param_step_count - 1, eigstate_count, eigstate_count), -np.inf
+        )
+        # Fill only the requested band around the energy-ordered diagonal. This
+        # assumes crossings are local in energy index, but still enforces a
+        # one-to-one assignment inside that band below.
         for diag_num in range(-k, k + 1):
             my_prod_diag = np.abs(
                 _matrix_prod_diagonal(
@@ -110,23 +211,28 @@ def sort_smooth(eigvals, eigvecs, num_diagonals=None):
                 )
             )
             if diag_num > 0:
-                diagonals[
-                    :, k - diag_num, diag_num : diag_num + my_prod_diag.shape[1]
-                ] = my_prod_diag
+                rows = np.arange(my_prod_diag.shape[1])
+                cols = rows + diag_num
             else:
-                diagonals[:, k - diag_num, 0 : my_prod_diag.shape[1]] = my_prod_diag
+                cols = np.arange(my_prod_diag.shape[1])
+                rows = cols - diag_num
 
-        best_overlaps = np.argmax(diagonals, axis=-2) - np.arange(
-            k, k - eigstate_count, -1
-        )
+            overlap_matrices[:, rows, cols] = my_prod_diag
     else:
         overlap_matrices = np.abs(eigvecs[:-1].swapaxes(-1, -2) @ eigvecs[1:].conj())
-        best_overlaps = np.argmax(overlap_matrices, axis=1)
 
-    # Cumulative permutations
+    best_overlaps = np.empty((param_step_count - 1, eigstate_count), dtype=int)
+    for i, overlap_matrix in enumerate(overlap_matrices):
+        # For each current state, choose one distinct previous state. A simple
+        # argmax can assign the same previous state to several current states,
+        # duplicating eigenvectors and losing others.
+        best_overlaps[i] = _overlap_permutation(overlap_matrix)
+
+    # Calculate cumulative permutations based on best overlaps.
+    # Work backwards so the final parameter value keeps the usual energy order,
+    # while earlier steps are relabelled to connect smoothly to it.
     integrated_permutations = np.empty((param_step_count, eigstate_count), dtype=int)
     integrated_permutations[-1] = np.arange(eigstate_count)
-
     for i in range(param_step_count - 2, -1, -1):
         integrated_permutations[i] = best_overlaps[i][integrated_permutations[i + 1]]
 
@@ -197,8 +303,102 @@ def _solve_quadratic(a, b, c):
     return np.maximum(x1, x2)
 
 
+def _as_halfint_array(double_values):
+    return np.array([operators.HalfInt(of=int(dl)) for dl in double_values])
+
+
+def _operator_expectation(operator, eigstates):
+    return np.einsum(
+        "ik,ij,jk->k", np.conj(eigstates), operator, eigstates, optimize="optimal"
+    )
+
+
+def _is_diagonal(operator):
+    return np.allclose(operator, np.diag(np.diag(operator)))
+
+
+def _weights_for_state_labels(
+    component_double_labels, component_probabilities, double_labels
+):
+    weights = np.zeros(double_labels.shape[0])
+    for double_label in np.unique(double_labels):
+        state_mask = double_labels == double_label
+        component_mask = component_double_labels == double_label
+        if np.any(component_mask):
+            weights[state_mask] = component_probabilities[component_mask][
+                :, state_mask
+            ].sum(axis=0)
+    return weights
+
+
+def _weights_for_operator_labels(operator, eigstates, double_labels, angular=False):
+    if _is_diagonal(operator):
+        operator_eigvals = np.diag(operator).real
+        operator_eigvecs = None
+    else:
+        operator_eigvals, operator_eigvecs = np.linalg.eigh(operator)
+
+    if angular:
+        component_double_labels = np.rint(
+            2 * _solve_quadratic(1, 1, -1 * operator_eigvals)
+        ).astype(int)
+    else:
+        component_double_labels = np.rint(2 * operator_eigvals).astype(int)
+
+    if operator_eigvecs is None:
+        component_probabilities = np.abs(eigstates) ** 2
+    else:
+        component_probabilities = np.abs(operator_eigvecs.conj().T @ eigstates) ** 2
+
+    return _weights_for_state_labels(
+        component_double_labels, component_probabilities, double_labels
+    )
+
+
+def _joint_weights_for_diagonal_labels(
+    component_label_columns, state_label_columns, eigstates
+):
+    component_labels = np.column_stack(component_label_columns)
+    state_labels = np.column_stack(state_label_columns)
+    probabilities = np.abs(eigstates) ** 2
+
+    weights = np.zeros(eigstates.shape[1])
+    for state_idx, state_label in enumerate(state_labels):
+        component_mask = np.all(component_labels == state_label, axis=1)
+        weights[state_idx] = probabilities[component_mask, state_idx].sum()
+    return weights
+
+
+def _warn_mixed_states(label_names, labels, weights, min_weight):
+    mixed_state_indices = np.flatnonzero(weights < min_weight)
+    if mixed_state_indices.size == 0:
+        return
+
+    worst_state_idx = mixed_state_indices[np.argmin(weights[mixed_state_indices])]
+    label_text = ", ".join(
+        f"{label_name}={labels[worst_state_idx, i]}"
+        for i, label_name in enumerate(label_names)
+    )
+    warnings.warn(
+        f"{mixed_state_indices.size} state(s) have less than {min_weight:.0%} "
+        f"weight in their assigned ({', '.join(label_names)}) label sector; "
+        "labels may be unreliable. "
+        f"Worst case: state {worst_state_idx} labelled ({label_text}) has "
+        f"weight {weights[worst_state_idx]:.3f}.",
+        stacklevel=3,
+    )
+
+
 @log_time
-def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
+def label_states(
+    mol,
+    eigstates,
+    labels,
+    index_repeats=False,
+    basis_idx=None,
+    warn_mixed=True,
+    min_weight=0.9,
+):
     """
     Labels the eigenstates of a molecule with quantum numbers corresponding to
     specified labels. The returned numbers will only be good if the state is
@@ -209,19 +409,30 @@ def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
     operators for the molecule and the eigenstates to calculate these quantum numbers.
 
     The function supports labels for the total angular momentum vectors
-    (N, F, I, I1, I2) for the z-component of them respectively (M<>).
-    It also has an option to return the indices of repeated labels.
+    (N, F, I, I1, I2) and for their z-components respectively (M<>).
+    Labels are inferred from operator expectation values. If warn_mixed is True,
+    the function warns when an assigned label sector carries less than min_weight
+    of an eigenstate's probability weight.
 
     Args:
         mol: An object representing the molecule, which contains the maximum angular
-            momentum (Nmax) and intrinsic angular momenta (Ii).
-        eigstates (ndarray): An array of eigenstates for which the labels are to be
-            calculated.
+            momentum (Nmax), minimum angular momentum (Nmin), and intrinsic angular
+            momenta (Ii).
+        eigstates (ndarray): Eigenstates for which the labels are to be calculated.
+            The expected shape is (basis, states). A single eigenvector with shape
+            (basis,) is also accepted.
         labels (list of str): A list of strings indicating which quantum numbers to
             calculate. Valid labels are "MN", "MF", "MI", "MI1", "MI2" for M-components
             and "N", "F", "I", "I1", "I2" for squared total angular momentum vectors.
         index_repeats (bool, optional): If True, includes the label indices of repeated
             labels in the output. Defaults to False.
+        basis_idx (ndarray | None, optional): Indices mapping a cropped eigstates
+            basis back into the full uncoupled basis. Required when eigstates were
+            diagonalised in a cropped basis.
+        warn_mixed (bool, optional): If True, warns when labels are assigned to
+            states with weak weight in the labelled sector. Defaults to True.
+        min_weight (float, optional): Minimum sector weight before warning that a
+            label may be unreliable. Defaults to 0.9.
 
     Returns:
         ndarray: A two-dimensional array where each row corresponds to the desired
@@ -232,7 +443,9 @@ def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
     if eigstates.ndim == 1:
         eigstates = eigstates[:, None]  # treat as one eigenvector (column)
 
-    N_op, I1_op, I2_op = operators.generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
+    N_op, I1_op, I2_op = operators.generate_vecs(
+        mol.Nmax, mol.Ii[0], mol.Ii[1], Nmin=mol.Nmin
+    )
     full_dim = N_op.shape[-1]
     vec_dim = eigstates.shape[0]
 
@@ -249,15 +462,22 @@ def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
         basis_idx = np.asarray(basis_idx, dtype=int)
         if basis_idx.size != vec_dim:
             raise ValueError(
-                f"basis_idx length {basis_idx.size} does not match eigstates dimension {vec_dim}."
+                (
+                    f"basis_idx length {basis_idx.size} does not match"
+                    f"eigstates dimension {vec_dim}."
+                )
             )
 
-        # Crop operator vectors (shape (3,dim,dim))
-        N_op  = N_op[:, basis_idx, :][:, :, basis_idx]
-        I1_op = I1_op[:, basis_idx, :][:, :, basis_idx]
-        I2_op = I2_op[:, basis_idx, :][:, :, basis_idx]
-    
+    def crop_operator(operator):
+        if basis_idx is None:
+            return operator
+        return operator[basis_idx, :][:, basis_idx]
+
     out_labels = []
+    diagonal_label_names = []
+    diagonal_component_label_columns = []
+    diagonal_state_label_columns = []
+    diagonal_output_label_columns = []
 
     for label in labels:
         if label[0] == "M":
@@ -277,11 +497,20 @@ def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
                 case _:
                     warnings.warn("Invalid label, ignoring")
                     continue
+            Tz = crop_operator(Tz)
             double_M_labels = np.rint(
-                2 * np.einsum("ik,ij,jk->k", np.conj(eigstates), Tz, eigstates)
+                2 * _operator_expectation(Tz, eigstates)
             ).real.astype(int)
-            M_labels = np.array([operators.HalfInt(of=dl) for dl in double_M_labels])
+            M_labels = _as_halfint_array(double_M_labels)
             out_labels.append(M_labels)
+
+            if warn_mixed:
+                diagonal_label_names.append(label)
+                diagonal_component_label_columns.append(
+                    np.rint(2 * np.diag(Tz).real).astype(int)
+                )
+                diagonal_state_label_columns.append(double_M_labels)
+                diagonal_output_label_columns.append(M_labels)
         else:
             match label:
                 case "N":
@@ -299,12 +528,42 @@ def label_states(mol, eigstates, labels, index_repeats=False, basis_idx=None):
                 case _:
                     warnings.warn("Invalid label, ignoring")
                     continue
-            T2eigval = np.einsum("ik,ij,jk->k", np.conj(eigstates), T2, eigstates)
+            T2 = crop_operator(T2)
+            T2eigval = _operator_expectation(T2, eigstates)
             double_T_labels = np.rint(
                 2 * _solve_quadratic(1, 1, -1 * T2eigval)
             ).real.astype(int)
-            T_labels = np.array([operators.HalfInt(of=dl) for dl in double_T_labels])
+            T_labels = _as_halfint_array(double_T_labels)
             out_labels.append(T_labels)
+
+            if warn_mixed:
+                if _is_diagonal(T2):
+                    diagonal_label_names.append(label)
+                    diagonal_component_label_columns.append(
+                        np.rint(
+                            2 * _solve_quadratic(1, 1, -1 * np.diag(T2).real)
+                        ).astype(int)
+                    )
+                    diagonal_state_label_columns.append(double_T_labels)
+                    diagonal_output_label_columns.append(T_labels)
+                else:
+                    label_weights = _weights_for_operator_labels(
+                        T2, eigstates, double_T_labels, angular=True
+                    )
+                    _warn_mixed_states(
+                        [label], np.array([T_labels]).T, label_weights, min_weight
+                    )
+
+    if warn_mixed and diagonal_label_names:
+        joint_weights = _joint_weights_for_diagonal_labels(
+            diagonal_component_label_columns, diagonal_state_label_columns, eigstates
+        )
+        _warn_mixed_states(
+            diagonal_label_names,
+            np.array(diagonal_output_label_columns).T,
+            joint_weights,
+            min_weight,
+        )
 
     if index_repeats:
         out_labels.append(_get_prior_repeat_indices(np.array(out_labels).T))
@@ -324,62 +583,108 @@ def sort_by_labels(eigenlabels, eigenenergies, eigenstates):
 
     Args:
         eigenlabels (np.ndarray): Array of labels corresponding to eigenstates.
-        eigenenergies (np.ndarray): Array of eigenenergies to be sorted.
-        eigenstates (np.ndarray): Array of eigenstates to be sorted.
+        eigenenergies (np.ndarray): Array of eigenenergies to be sorted along the
+            last axis. Single-Hamiltonian and scan-shaped outputs are supported.
+        eigenstates (np.ndarray): Array of eigenstates to be sorted along the last
+            axis. Single-Hamiltonian and scan-shaped outputs are supported.
 
     Returns:
         tuple: The sorted eigenlabels, eigenenergies, and eigenstates.
     """
     indices = np.lexsort(eigenlabels[:, ::-1].T)
-    return eigenlabels[indices], eigenenergies[:, indices], eigenstates[:, :, indices]
+    return (
+        eigenlabels[indices],
+        np.take(eigenenergies, indices, axis=-1),
+        np.take(eigenstates, indices, axis=-1),
+    )
 
 
 @log_time
-def transition_electric_moments(mol, eigenstates, h=0, from_states=slice(None)):
+def transition_electric_moments(
+    mol, eigenstates, h=0, from_states=slice(None), to_states=slice(None)
+):
     """
-    Calculates the electric dipole transition coupling strengths between molecular
+    Calculates electric dipole transition matrix elements between molecular
     eigenstates.
 
+    These are the absolute values of <from|d_h|to>, where d_h is the spherical
+    component of the molecule-fixed electric dipole operator transformed into the
+    lab basis and expanded in the eigenstate basis. Multiplying by an electric
+    field amplitude gives the corresponding dipole coupling energy scale.
+
     Args:
-        eigenstates (ndarray): An array containing the eigenstates of the molecule.
         mol: An object representing the molecule.
+        eigenstates (ndarray): An array containing the eigenstates of the molecule,
+            with shape (..., basis, states).
         h (int, optional): The helicity of the transition, +1 for sigma+, 0 for pi,
             -1 for sigma-.
         from_states (int, slice, or list, optional): The indices of the initial states
             from which transitions are considered. If an integer is passed, it is
-            internallyconverted to a list. By default, all states are
+            internally converted to a list. By default, all states are
+            considered (slice(None)). These indices refer to the last axis of the
+            supplied eigenstates array, so they are relative to any cropped
+            eigenstate array.
+        to_states (int, slice, or list, optional): The indices of the final states
+            to which transitions are considered. If an integer is passed, it is
+            internally converted to a list. By default, all states are
             considered (slice(None)).
+            These indices also refer to the last axis of the supplied eigenstates
+            array, so they are relative to any cropped eigenstate array.
 
     Returns:
-        ndarray: An array containing the absolute values of the transition electric
-            moments for the specified transitions between eigenstates.
+        ndarray: Absolute transition electric moments with shape
+            eigenstates.shape[:-2] + (n_from, n_to). The second-to-last axis
+            enumerates the selected initial/from-state columns, in from_states order.
+            The last axis enumerates the selected final/to-state columns, in
+            to_states order. Output indices are positions inside those supplied
+            from_states and to_states selections, not necessarily the original
+            eigenstate indices.
     """
 
-    if isinstance(from_states, int):
-        from_states = [from_states]
+    state_count = eigenstates.shape[-1]
+    all_state_indices = np.arange(state_count)
+    if isinstance(from_states, (int, np.integer)):
+        from_states = [int(from_states)]
+    if isinstance(to_states, (int, np.integer)):
+        to_states = [int(to_states)]
+
+    from_state_indices = np.atleast_1d(all_state_indices[from_states])
+    to_state_indices = np.atleast_1d(all_state_indices[to_states])
 
     dipole_op = mol.d0 * operators.expanded_unit_dipole_operator(mol, h)
 
     dipole_matrix_elements = (
-        eigenstates[..., from_states].conj().swapaxes(-1, -2) @ dipole_op @ eigenstates
+        eigenstates[..., from_states].conj().swapaxes(-1, -2)
+        @ dipole_op
+        @ eigenstates[..., to_states]
     )
 
     if h != 0:
-        """
-        After rotating wave approximation for sigma +/-, interaction matrix elements
-        have d_pm matrix elements appearing above and below the diagonal respectively.
-        """
+        # For circularly polarised light the electric field has a rotating
+        # positive-frequency component and its complex conjugate. After the
+        # rotating-wave approximation, opposite transition directions use
+        # Hermitian-conjugate spherical dipole components. With the convention used
+        # in the dipole operators, (d_h)^\dagger = -d_-h for h = +/-1, hence the
+        # second operator below is -d_h^\dagger.
+        #
+        # This function uses the supplied eigenstate index order to decide which
+        # side of the transition matrix diagonal an element lies on. Entries above
+        # and below that diagonal are treated as opposite transition directions, so
+        # they are filled with the two conjugate rotating components. If eigenstates
+        # is cropped, the indices are relative to that cropped array.
+        #
+        # Because we return absolute values, swapping from_states and to_states
+        # should give the transpose of the same coupling strengths.
         dipole_op_other = -dipole_op.conj().T
 
         opposite_dipole_matrix_elements = (
             eigenstates[..., from_states].conj().swapaxes(-1, -2)
             @ dipole_op_other
-            @ eigenstates
+            @ eigenstates[..., to_states]
         )
 
-        all_mask = np.ones(dipole_matrix_elements.shape)
-        mask = np.tril(all_mask, k=-1)
-        mask_other = np.triu(all_mask, k=1)
+        mask = from_state_indices[:, None] > to_state_indices[None, :]
+        mask_other = from_state_indices[:, None] < to_state_indices[None, :]
 
         transition_electric_moments = (
             dipole_matrix_elements * mask + opposite_dipole_matrix_elements * mask_other
@@ -395,17 +700,22 @@ def magnetic_moment(mol, eigstates):
     Calculates the magnetic moments of each eigenstate.
 
     Args:
-        eigstates (np.ndarray): array of eigenstates from diagonalisation
         mol: The molecule used to generate the eigenstates
+        eigstates (np.ndarray): Eigenstates from diagonalisation with shape
+            (basis, states) or (steps, basis, states).
 
     Returns:
-        ndarray: An array corresponding to the magnetic moments of the eigenstates.
+        ndarray: Magnetic moments with shape eigstates.shape[:-2] + (states,).
     """
 
     muz = -1 * operators.zeeman_ham(mol)
 
     mu = np.einsum(
-        "vae,ab,vbe->ve", np.conjugate(eigstates), muz, eigstates, optimize="optimal"
+        "...ae,ab,...be->...e",
+        np.conjugate(eigstates),
+        muz,
+        eigstates,
+        optimize="optimal",
     )
     return mu.real
 
@@ -415,16 +725,21 @@ def electric_moment(mol, eigstates):
     Calculates the electric moments of each eigenstate.
 
     Args:
-        eigstates (np.ndarray): array of eigenstates from diagonalisation
         mol: The molecule used to generate the eigenstates
+        eigstates (np.ndarray): Eigenstates from diagonalisation with shape
+            (basis, states) or (steps, basis, states).
 
     Returns:
-        ndarray: An array corresponding to the electric moments of the eigenstates.
+        ndarray: Electric moments with shape eigstates.shape[:-2] + (states,).
     """
 
     dz = -1 * operators.dc_ham(mol)
 
     d = np.einsum(
-        "vae,ab,vbe->ve", np.conjugate(eigstates), dz, eigstates, optimize="optimal"
+        "...ae,ab,...be->...e",
+        np.conjugate(eigstates),
+        dz,
+        eigstates,
+        optimize="optimal",
     )
     return d.real

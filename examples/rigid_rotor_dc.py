@@ -78,15 +78,14 @@ state = 2
 probs = np.abs(eigenstates[:, :, state]) ** 2
 
 important_count = 7
-sorti = np.argsort(-np.abs(eigenstates[1, :, state]) ** 2)
+sorti = np.argsort(-(np.abs(eigenstates[1, :, state]) ** 2))
 
 importantprobs = np.abs(eigenstates[:, sorti[:important_count], state]) ** 2
 
 colors = []
 plot_probs = np.zeros((important_count, E_STEPS))
 ii = 0
-# for i in sorti[:important_count]:
-for j, (N, M) in enumerate(operators.sph_iter(7)):
+for j, (N, M) in enumerate(operators.sph_iter(mol.Nmax, Nmin=mol.Nmin)):
     for i in sorti[:important_count]:
         if j == i:
             cmap = mpl.colormaps[cmaps[N]]

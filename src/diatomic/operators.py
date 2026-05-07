@@ -2,7 +2,7 @@ import numbers
 import numpy as np
 import scipy.constants
 from scipy.linalg import block_diag
-from scipy.special import sph_harm
+from scipy.special import sph_harm_y
 from sympy.physics.wigner import wigner_3j
 
 from diatomic import log_time
@@ -150,15 +150,16 @@ def proj_iter(angmom):
     # return (HalfInt(double=dm) for dm in range(-2 * angmom, 2 * angmom + 1, 2))
 
 
-def sph_iter(Nmin, Nmax):
+def sph_iter(Nmax, *, Nmin=0):
     """
     Generator function that yields tuples of spherical harmonic angular momentum
     quantum numbers up to a specified maximum angular momentum Nmax.
 
     Args:
-        Nmin (int): minimum rotational quantum number (inclusive).
         Nmax (int): The maximum (inclusive) angular momentum quantum number to
             iterate up to.
+        Nmin (int, optional): Minimum rotational quantum number (inclusive).
+            Defaults to 0.
 
     Yields:
         tuple: A tuple of two elements where the first element is the angular momentum
@@ -168,10 +169,10 @@ def sph_iter(Nmin, Nmax):
     return ((N, MN) for N in range(Nmin, Nmax + 1) for MN in proj_iter(N))
 
 
-def uncoupled_basis_iter(Nmin, Nmax, I1, I2):
+def uncoupled_basis_iter(Nmax, I1, I2, *, Nmin=0):
     """
     Generator function that yields a Cartesian product of tuples representing the
-    uncoupled basis states  for two angular momenta up to a specified maximum angular
+    uncoupled basis states for two angular momenta up to a specified maximum angular
     momentum.
 
     Args:
@@ -179,23 +180,24 @@ def uncoupled_basis_iter(Nmin, Nmax, I1, I2):
             momentum.
         I1 (int | HalfInt | float): The angular momentum quantum number for the first
             intrinsic angular momentum of the nucleus.
-        I2 (int | HalfInt | float): The angular momentum quantum number for the second
-            intrinsic angular momentumof the nucleus.
+        I2 (int | HalfInt | float): The angular momentum quantum number for the
+            second intrinsic angular momentum of the nucleus.
+        Nmin (int, optional): Minimum rotational quantum number. Defaults to 0.
 
     Yields:
         tuple: A tuple of four elements (N, MN, M1, M2), where N is an angular momentum
-            quantum number from 0 to Nmax (inclusive), MN is the projection of N,
+            quantum number from Nmin to Nmax (inclusive), MN is the projection of N,
             and M1 and M2 are the projections of I1 and I2, respectively.
     """
     return (
         (N, MN, M1, M2)
-        for (N, MN) in sph_iter(Nmin,Nmax)
+        for (N, MN) in sph_iter(Nmax, Nmin=Nmin)
         for M1 in proj_iter(I1)
         for M2 in proj_iter(I2)
     )
 
 
-def uncoupled_basis_pos(N, MN, MI1, MI2, I1, I2, Nmin):
+def uncoupled_basis_pos(N, MN, MI1, MI2, I1, I2, *, Nmin=0):
     """
     Calculates the position (index) of a given uncoupled basis state in a linear array
     that would be produced by uncoupled_basis_iter.
@@ -212,35 +214,36 @@ def uncoupled_basis_pos(N, MN, MI1, MI2, I1, I2, Nmin):
             first intrinsic angular momentum.
         I2 (int | HalfInt | float): The angular momentum quantum number for the
             second intrinsic angular momentum.
+        Nmin (int, optional): Minimum rotational quantum number of the basis.
+            Defaults to 0.
 
     Returns:
         int: The index position of the uncoupled basis state in a linear array.
     """
     # Index of this (N,MN) within the list of all N,MN with N in [Nmin, Nmax]
     N_block_index = N**2 + N - MN - Nmin**2
-    return int(
-        (I2 - MI2) 
-        + (2 * I2 + 1) * ((I1 - MI1) + (2 * I1 + 1) * N_block_index)
-    )
+    return int((I2 - MI2) + (2 * I2 + 1) * ((I1 - MI1) + (2 * I1 + 1) * N_block_index))
 
 
-def num_proj_with_below(Nmin, Nmax):
+def num_proj_with_below(Nmax, *, Nmin=0):
     """
     Calculates the total number of projection quantum numbers for all angular momentum
-    quantum numbers from 0 up to a specified maximum value, Nmax.
+    quantum numbers from Nmin up to a specified maximum value, Nmax.
 
-    The function sums analyticalls the number of possible projections for each
+    The function sums analytically the number of possible projections for each
     angular momentum quantum number, which follows the formula 2 * N + 1.
-    i.e. `sum 2n+1, n=a to b` 
+    i.e. `sum 2n + 1, n = Nmin to Nmax`
 
     Args:
         Nmax (int): The maximum angular momentum quantum number to include in the sum.
+        Nmin (int, optional): The minimum angular momentum quantum number to include
+            in the sum. Defaults to 0.
 
     Returns:
         int: The cumulative number of projection quantum numbers for each angular
-            momentum 0 to Nmax.
+            momentum Nmin to Nmax.
     """
-    # sum([2 * x + 1 for x in range(0, Nmax + 1)]) =
+    # sum([2 * x + 1 for x in range(Nmin, Nmax + 1)]) =
     return int((Nmax + 1) ** 2 - Nmin**2)
 
 
@@ -260,19 +263,26 @@ def num_proj(angmom):
     return int(2 * angmom + 1)
 
 
-
 def proj_iter_bounded(j, mmin=None, mmax=None):
     """
     Like proj_iter(j) but restricted to m in [mmin, mmax] (inclusive),
     intersected with the physical range [-j, +j]. Works for int/HalfInt/float j.
     """
     twoj = int(2 * j)
+    parity = twoj % 2
 
-    twomin = -twoj if mmin is None else int(2 * mmin)
-    twomax =  twoj if mmax is None else int(2 * mmax)
+    # Work in doubled projection units.  Physical projections have the same
+    # integer parity as 2*j: integer-j ladders are even, half-integer-j ladders
+    # are odd.  Bounds such as mmax=0.5 for j=2 therefore need to snap down to
+    # m=0, not produce unphysical half-integer projections.
+    twomin = -twoj if mmin is None else int(np.ceil(2 * mmin))
+    twomax = twoj if mmax is None else int(np.floor(2 * mmax))
 
     twomin = max(twomin, -twoj)
-    twomax = min(twomax,  twoj)
+    twomax = min(twomax, twoj)
+
+    twomin += (parity - twomin) % 2
+    twomax -= (twomax - parity) % 2
 
     if twomax < twomin:
         return iter(())  # empty
@@ -281,13 +291,24 @@ def proj_iter_bounded(j, mmin=None, mmax=None):
     return (HalfInt(of=dm) for dm in range(twomax, twomin - 1, -2))
 
 
-def mn_crop_indices(Nmin, Nmax, I1, I2, MNmin=None, MNmax=None):
+def mn_crop_indices(Nmax, I1, I2, *, Nmin=0, MNmin=None, MNmax=None):
     """
-    Indices to keep from the *full* uncoupled basis ordered as:
-      for (N,MN) in sph_iter(Nmin,Nmax): for M1 in proj_iter(I1): for M2 in proj_iter(I2)
+    Indices to keep from the full uncoupled basis after restricting MN.
 
-    Returns a 1D int array of basis indices corresponding to MN in [MNmin, MNmax].
-    If MNmin and MNmax are both None, returns None (meaning "keep everything").
+    The returned indices refer to the basis ordering produced by
+    `uncoupled_basis_iter(Nmax, I1, I2, Nmin=Nmin)`.
+
+    Args:
+        Nmax (int): Maximum rotational quantum number in the full basis.
+        I1,I2 (float): Nuclear spins of nuclei 1 and 2.
+        Nmin (int, optional): Minimum rotational quantum number in the full basis.
+            Defaults to 0.
+        MNmin,MNmax (float | None, optional): Inclusive MN bounds. If both are
+            None, no cropping is requested.
+
+    Returns:
+        ndarray | None: One-dimensional integer basis indices, or None if both MN
+            bounds are None.
     """
     if MNmin is None and MNmax is None:
         return None
@@ -310,18 +331,27 @@ def mn_crop_indices(Nmin, Nmax, I1, I2, MNmin=None, MNmax=None):
 
 def crop_by_indices(op, indices):
     """
-    Crop any operator/Hamiltonian in the *full* uncoupled basis to the MN-restricted subspace.
+    Crop any operator/Hamiltonian in the *full* uncoupled basis to the MN-restricted
+    subspace.
 
-    op: array-like of shape (..., N, N)
-    returns: ndarray of shape (..., N', N')
+    Args:
+        op (ndarray): Operator or Hamiltonian with shape (..., basis, basis).
+        indices (ndarray | None): Basis indices to keep. If None, op is returned
+            unchanged.
+
+    Returns:
+        ndarray: Cropped operator with shape (..., cropped_basis, cropped_basis).
     """
     if indices is None:
         return op
 
     if op.shape[-1] != op.shape[-2]:
-        raise ValueError(f"Expected op to be square on last two axes, got {op.shape[-2:]}")
+        raise ValueError(
+            f"Expected op to be square on last two axes, got {op.shape[-2:]}"
+        )
 
     return op[..., indices, :][..., :, indices]
+
 
 def vector_dot(A, B):
     """Cartesian dot product of two vectors of (matrix) operators A, B
@@ -434,7 +464,7 @@ def z_operator(J):
     return 0.5 * (J_plus @ J_minus - J_minus @ J_plus)
 
 
-def generate_vecs(Nmin, Nmax, I1, I2):
+def generate_vecs(Nmax, I1, I2, *, Nmin=0):
     """Build N, I1, I2 angular momentum vectors
 
     Generate the vectors of the angular momentum operators which we need
@@ -443,12 +473,14 @@ def generate_vecs(Nmin, Nmax, I1, I2):
     Args:
         Nmax (float): maximum rotational level to include in calculations
         I1,I2 (float): Nuclear spins of nuclei 1 and 2
+        Nmin (int, optional): minimum rotational level to include. Defaults to 0.
     Returns:
         N_vec,I1_vec,I2_vec (list of np.ndarray): length-3 list of
-            (2Nmax+1)*(2I1+1)*(2I2+1) square np arrays
+            square arrays with width
+            num_proj_with_below(Nmax, Nmin=Nmin) * (2I1 + 1) * (2I2 + 1)
     """
 
-    shapeN = num_proj_with_below(Nmin,Nmax)
+    shapeN = num_proj_with_below(Nmax, Nmin=Nmin)
     shape1 = num_proj(I1)
     shape2 = num_proj(I2)
 
@@ -536,11 +568,11 @@ def wigner_D(l, m, alpha, beta, gamma):  # noqa: E741
         D (float) : Value of the wigner-D matrix
     """
     prefactor = np.sqrt((4 * np.pi) / (2 * l + 1))
-    function = np.conj(sph_harm(m, l, alpha, beta))
+    function = np.conj(sph_harm_y(l, m, alpha, beta))
     return prefactor * function
 
 
-def T2_C(Nmin,Nmax, I1, I2):
+def T2_C(Nmax, I1, I2, *, Nmin=0):
     """
     The irreducible spherical tensors for the spherical harmonics in the
     rotational basis.
@@ -548,17 +580,18 @@ def T2_C(Nmin,Nmax, I1, I2):
     Args:
         Nmax (int) : Maximum rotational state to include
         I1,I2 (float) :  The nuclear spins of nucleus 1 and 2
+        Nmin (int, optional): Minimum rotational state to include. Defaults to 0.
 
     Returns:
         T (list of np.ndarray) : spherical tensor T^2(C). Each element is a
             spherical operator
     """
-    matrix_width = num_proj_with_below(Nmin,Nmax)
+    matrix_width = num_proj_with_below(Nmax, Nmin=Nmin)
 
     T = np.zeros((5, matrix_width, matrix_width))
 
-    for x, (N, MN) in enumerate(sph_iter(Nmin,Nmax)):
-        for y, (Np, MNp) in enumerate(sph_iter(Nmin,Nmax)):
+    for x, (N, MN) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
+        for y, (Np, MNp) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
             for i, q in enumerate(range(-2, 2 + 1)):
                 T[i][x, y] = (
                     ((-1) ** MN)
@@ -628,7 +661,7 @@ Molecular operators
 """
 
 
-def unit_dipole_operator(Nmin,Nmax, h):
+def unit_dipole_operator(Nmax, h, *, Nmin=0):
     """
     Generates the induced dipole moment operator for a rigid rotor molecule in
     the spherical harmonic basis.
@@ -641,16 +674,18 @@ def unit_dipole_operator(Nmin,Nmax, h):
     Args:
         Nmax (int): The maximum rotational quantum number to include.
         h (float): The helicity of the dipole field.
+        Nmin (int, optional): The minimum rotational quantum number to include.
+            Defaults to 0.
 
     Returns:
         np.ndarray: The induced dipole moment matrix for transitions between
                     rotational states up to Nmax.
     """
-    matrix_width = num_proj_with_below(Nmin,Nmax)
+    matrix_width = num_proj_with_below(Nmax, Nmin=Nmin)
     dmat = np.zeros((matrix_width, matrix_width))
 
-    for i, (N1, M1) in enumerate(sph_iter(Nmin,Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmin,Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
             dmat[i, j] = (
                 (-1) ** M1
                 * np.sqrt((2 * N1 + 1) * (2 * N2 + 1))
@@ -676,7 +711,7 @@ def expanded_unit_dipole_operator(mol, h):
     Returns:
         np.ndarray: The expanded dipole operator matrix.
     """
-    dmat = unit_dipole_operator(mol.Nmin,mol.Nmax, h)
+    dmat = unit_dipole_operator(mol.Nmax, h, Nmin=mol.Nmin)
 
     nuc_spin_identity = np.identity(num_proj(mol.Ii[0]) * num_proj(mol.Ii[1]))
     dmat_expanded = np.kron(dmat, nuc_spin_identity)
@@ -684,7 +719,7 @@ def expanded_unit_dipole_operator(mol, h):
     return dmat_expanded
 
 
-def electric_gradient(Nmin,Nmax):
+def electric_gradient(Nmax, *, Nmin=0):
     """
     Calculates the electric field gradient at the nucleus for rotational states.
 
@@ -693,16 +728,17 @@ def electric_gradient(Nmin,Nmax):
 
     Args:
         Nmax (int): The maximum rotational state to include.
+        Nmin (int, optional): The minimum rotational state to include. Defaults to 0.
 
     Returns:
         list of np.ndarray: A length-5 list of arrays representing the electric field
                             gradient tensor components.
     """
-    matrix_width = num_proj_with_below(Nmin,Nmax)
+    matrix_width = num_proj_with_below(Nmax, Nmin=Nmin)
     T = np.zeros((5, matrix_width, matrix_width))
 
-    for i, (N1, M1) in enumerate(sph_iter(Nmin,Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmin,Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
             for n, q in enumerate(range(-2, 2 + 1)):
                 T[n][i, j] = (
                     (-1) ** M1
@@ -726,7 +762,7 @@ def expanded_electric_gradient(mol):
     Returns:
         np.ndarray: The expanded electric gradient tensor.
     """
-    elec_mat = electric_gradient(mol.Nmin, mol.Nmax)
+    elec_mat = electric_gradient(mol.Nmax, Nmin=mol.Nmin)
 
     nuc_spin_basis_size = num_proj(mol.Ii[0]) * num_proj(mol.Ii[1])
     nuc_spin_identity = np.identity(nuc_spin_basis_size)
@@ -784,7 +820,7 @@ def expanded_quad_moment(mol, nucleus):
     T_nucleus = quad_moment(mol.Ii[nucleus])
 
     # Expand into full hyperfine basis
-    num_N_proj = num_proj_with_below(mol.Nmin, mol.Nmax)
+    num_N_proj = num_proj_with_below(mol.Nmax, Nmin=mol.Nmin)
     nuc_spin_basis_size = num_proj(mol.Ii[0]) * num_proj(mol.Ii[1])
     expanded_matrix_width = num_N_proj * nuc_spin_basis_size
 
@@ -890,7 +926,7 @@ def scalar_nuclear(Ci, J1, J2):
     return Ci * vector_dot(J1, J2)
 
 
-def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmin, Nmax):
+def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmax, *, Nmin=0):
     """Calculate the tensor spin-spin interaction.
 
     This function is to calculate the tensor spin-spin interaction.
@@ -901,13 +937,14 @@ def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmin, Nmax):
         C3 (float) - spin-spin coupling constant
         I1,I2 (float) - Cartesian Angular momentum operator Vectors
         Nmax (int) - maximum rotational state to include
+        Nmin (int, optional) - minimum rotational state to include. Defaults to 0.
 
     Returns:
         Hss (np.ndarray) - Hamiltonian for tensor spin-spin interaction
     """
 
     # steps for maths, creates the spherical tensors
-    T1 = T2_C(Nmin, Nmax, I1_val, I2_val)
+    T1 = T2_C(Nmax, I1_val, I2_val, Nmin=Nmin)
     T2 = makeT2(I1_vec, I2_vec)
     # return final Hamiltonian
     tensorss = np.sqrt(6) * C3 * tensor_dot(T1, T2)
@@ -915,8 +952,8 @@ def tensor_nuclear(C3, I1_vec, I2_vec, I1_val, I2_val, Nmin, Nmax):
     return tensorss
 
 
-def unit_ac_iso(Nmin,Nmax, I1, I2):
-    """Calculate isotropic Stark shifts
+def unit_ac_iso(Nmax, I1, I2, *, Nmin=0):
+    """Calculate the unit isotropic AC Stark operator.
 
     Generates the effect of the isotropic AC Stark shift for a rigid-rotor
     like molecule.
@@ -929,20 +966,24 @@ def unit_ac_iso(Nmin,Nmax, I1, I2):
     Args:
         Nmax (int) - maximum rotational quantum number to calculate (int)
         I1,I2 (float) - Nuclear spin of nucleus 1,2
+        Nmin (int, optional) - minimum rotational quantum number to calculate.
+            Defaults to 0.
 
     Returns:
-        H (np.ndarray) - isotropic AC Stark Hamiltonian
+        H (np.ndarray): Unit isotropic AC Stark operator in the full uncoupled
+            basis. Multiply by the scalar polarizability and light intensity to
+            obtain the Hamiltonian contribution in joules.
 
     """
-    matrix_width = num_proj_with_below(Nmin,Nmax) * num_proj(I1) * num_proj(I2)
+    matrix_width = num_proj_with_below(Nmax, Nmin=Nmin) * num_proj(I1) * num_proj(I2)
     HAC = -1 * np.identity(matrix_width)
 
     # return the matrix, in the full uncoupled basis.
     return (1.0 / (2 * scipy.constants.epsilon_0 * scipy.constants.c)) * HAC
 
 
-def unit_ac_aniso(Nmin, Nmax, I1, I2, Beta):
-    """Calculate anisotropic ac stark shift.
+def unit_ac_aniso(Nmax, I1, I2, Beta, *, Nmin=0):
+    """Calculate the unit anisotropic AC Stark operator for linear polarisation.
 
     Generates the effect of the anisotropic AC Stark shift for a rigid-rotor
     like molecule.
@@ -957,15 +998,19 @@ def unit_ac_aniso(Nmin, Nmax, I1, I2, Beta):
         Nmax (int) - maximum rotational quantum number to calculate
         I1,I2 (float) - Nuclear spin of nucleus 1,2
         Beta (float) - polarisation angle of the laser in Radians
+        Nmin (int, optional) - minimum rotational quantum number to calculate.
+            Defaults to 0.
 
     Returns:
-        H (np.ndarray): Hamiltonian in joules
+        H (np.ndarray): Unit anisotropic AC Stark operator in the full uncoupled
+            basis. Multiply by the anisotropic polarizability and light intensity
+            to obtain the Hamiltonian contribution in joules.
     """
 
-    matrix_width = num_proj_with_below(Nmin,Nmax)
+    matrix_width = num_proj_with_below(Nmax, Nmin=Nmin)
     HAC = np.zeros((matrix_width, matrix_width), dtype=complex)
-    for i, (N1, M1) in enumerate(sph_iter(Nmin,Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmin,Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
             M = M2 - M1
             HAC[i, j] = -1 * (
                 wigner_D(2, M, 0, Beta, 0)
@@ -983,10 +1028,62 @@ def unit_ac_aniso(Nmin, Nmax, I1, I2, Beta):
 
 
 def convert_poincare_to_jones(chi, phi):
-    pass
+    """
+    Convert Poincare-sphere angles to Jones-vector parameters.
+
+    This public helper is reserved for a future convenience conversion. For now,
+    pass `omega`, `gamma`, and `delta` directly to `unit_ac_aniso_ellip`.
+    """
+    raise NotImplementedError(
+        "convert_poincare_to_jones is not implemented yet; pass omega, gamma, "
+        "and delta directly to unit_ac_aniso_ellip."
+    )
 
 
-def unit_ac_aniso_ellip(Nmin, Nmax, I1, I2, omega, gamma, delta):
+def unit_ac_aniso_ellip(Nmax, I1, I2, omega, gamma, delta, *, Nmin=0):
+    """
+    Calculate the unit anisotropic AC Stark operator for arbitrary polarisation.
+
+    The light wave vector lies in the x-z plane,
+    k = (sin(omega), 0, cos(omega)), where z is the quantisation axis. The
+    transverse complex Jones vector is
+
+        epsilon = (
+            cos(omega) * cos(gamma),
+            exp(1j * delta) * sin(gamma),
+            -sin(omega) * cos(gamma),
+        )
+
+    so epsilon . k = 0. Defining polarisation is convention-heavy; the notes used
+    for this implementation are here:
+    https://gist.github.com/tomhepz/bbd3975aa8893d325d3facb76b902655
+
+    Some useful equivalences with the linear-polarisation version are:
+    (beta = 0)     <==>  (omega=pi/2, gamma=0,    delta=0)
+    (beta = pi/2)  <==>  (omega=pi/2, gamma=pi/2, delta=0)
+
+    For a beam propagating along +z, the circular-polarisation conventions are:
+    sigma+ light (omega=0, gamma=pi/4, delta=pi/2)  => epsilon = (1, +i, 0) / sqrt(2)
+    sigma- light (omega=0, gamma=pi/4, delta=-pi/2) => epsilon = (1, -i, 0) / sqrt(2)
+
+    Args:
+
+        Nmax (int) - maximum rotational quantum number to calculate
+        I1,I2 (float) - Nuclear spin of nucleus 1,2
+        omega (float) - Angle in radians between the light wave vector and the
+            quantisation axis, with the wave vector in the x-z plane.
+        gamma (float) - Amplitude angle in radians. gamma in [0, pi/2]
+            parametrizes the relative amplitudes of the two transverse components.
+        delta (float) - Phase shift in radians of the y component relative to the
+            first transverse component.
+        Nmin (int, optional) - minimum rotational quantum number to calculate.
+            Defaults to 0.
+
+    Returns:
+        H (np.ndarray): Unit anisotropic AC Stark operator in the full uncoupled
+            basis. Multiply by the anisotropic polarizability and light intensity
+            to obtain the Hamiltonian contribution in joules.
+    """
     prefactors_2 = -np.sqrt(3 / 8) * np.array(
         [
             np.cos(omega) ** 2 * np.cos(gamma) ** 2
@@ -1003,11 +1100,11 @@ def unit_ac_aniso_ellip(Nmin, Nmax, I1, I2, omega, gamma, delta):
         ]
     )
 
-    matrix_width = num_proj_with_below(Nmin, Nmax)
+    matrix_width = num_proj_with_below(Nmax, Nmin=Nmin)
     HAC = np.zeros((matrix_width, matrix_width), dtype=complex)
     # For each state pair
-    for i, (N1, M1) in enumerate(sph_iter(Nmin, Nmax)):
-        for j, (N2, M2) in enumerate(sph_iter(Nmin, Nmax)):
+    for i, (N1, M1) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
+        for j, (N2, M2) in enumerate(sph_iter(Nmax, Nmin=Nmin)):
             for M in range(-2, 2 + 1, 1):
                 HAC[i, j] += (
                     prefactors_2[M + 2]
@@ -1039,20 +1136,21 @@ def hyperfine_ham(mol):
     hyperfine hamiltonian.
 
     Args:
-        Nmax (int) - Maximum rotational level to include
-        I1_mag,I2_mag (float) - magnitude of the nuclear spins
-        Consts (Dictionary): Dict of molecular constants
+        mol: Molecule object containing rotational constants, hyperfine constants,
+            nuclear spins, and the rotational basis bounds.
     Returns:
         H0 : Hamiltonian for the hyperfine structure in joules
     """
-    N, I1, I2 = generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
+    N, I1, I2 = generate_vecs(mol.Nmax, mol.Ii[0], mol.Ii[1], Nmin=mol.Nmin)
     rotational_part = rotational(N, mol.Brot, mol.Drot)
     scalar_part = (
         scalar_nuclear(mol.Ci[0], N, I1)
         + scalar_nuclear(mol.Ci[1], N, I2)
         + scalar_nuclear(mol.C4, I1, I2)
     )
-    tensor_nuclear_part = tensor_nuclear(mol.C3, I1, I2, mol.Ii[0], mol.Ii[1], mol.Nmin, mol.Nmax)
+    tensor_nuclear_part = tensor_nuclear(
+        mol.C3, I1, I2, mol.Ii[0], mol.Ii[1], mol.Nmax, Nmin=mol.Nmin
+    )
     quadrupole_part = quadrupole(mol)
     H = rotational_part + scalar_part + tensor_nuclear_part + quadrupole_part
     return H
@@ -1072,10 +1170,8 @@ def dc_ham(mol):
 
 
     Args:
-        Nmax(int) -  maximum rotational quantum number to calculate
-        d0 (float) - Permanent electric dipole momentum
-        I1,I2 (float) - Nuclear spin of nucleus 1,2
-
+        mol: Molecule object containing the permanent electric dipole moment,
+            nuclear spins, and the rotational basis bounds.
 
     Returns:
         H (np.ndarray) - DC Stark Hamiltonian in joules
@@ -1092,14 +1188,13 @@ def zeeman_ham(mol):
     There is no electronic term and the magnetic field is fixed to be along the z axis.
 
     Args:
-        Nmax (int) - Maximum rotational level to include
-        I1_mag,I2_mag (float) - magnitude of the nuclear spins
-        Consts (Dictionary): Dict of molecular constants
+        mol: Molecule object containing magnetic moments, nuclear spins, and the
+            rotational basis bounds.
 
     Returns:
         Hz (np.ndarray): Hamiltonian for the zeeman effect
     """
-    N, I1, I2 = generate_vecs(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1])
+    N, I1, I2 = generate_vecs(mol.Nmax, mol.Ii[0], mol.Ii[1], Nmin=mol.Nmin)
     H = zeeman(mol.Mui[0], I1) + zeeman(mol.Mui[1], I2) + zeeman(mol.MuN, N)
     return H
 
@@ -1107,48 +1202,55 @@ def zeeman_ham(mol):
 @log_time
 def ac_ham(mol, a02, beta=0):
     """
-    Computes the AC Stark shift Hamiltonian for a molecule in an oscillating electric
-    field.
+    Computes the AC Stark Hamiltonian per unit light intensity for linear
+    polarisation.
 
-    The function combines the isotropic and anisotropic AC Stark shifts to obtain the
-    total AC Stark Hamiltonian, considering the polarization of the electric field.
+    The function combines the isotropic and anisotropic AC Stark operators for the
+    specified electric-field polarization.
 
     Args:
         mol: A molecule object containing the necessary attributes for calculation.
-        a02 (tuple): A two-element tuple containing the isotropic and anisotropic
-            polarizabilities.
-        beta (float, optional): The polarization angle of the electric field.
+        a02 (tuple): Two-element tuple (alpha0, alpha2) containing the isotropic
+            and anisotropic polarizabilities.
+        beta (float, optional): The polarization angle of the electric field in
+            radians.
             Defaults to 0.
 
     Returns:
-        np.ndarray: The AC Stark shift Hamiltonian matrix.
+        np.ndarray: The AC Stark Hamiltonian matrix per unit intensity.
     """
-    Hac = a02[0] * unit_ac_iso(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[1] * unit_ac_aniso(
-        mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1], beta
-    )
+    Hac = a02[0] * unit_ac_iso(mol.Nmax, mol.Ii[0], mol.Ii[1], Nmin=mol.Nmin) + a02[
+        1
+    ] * unit_ac_aniso(mol.Nmax, mol.Ii[0], mol.Ii[1], beta, Nmin=mol.Nmin)
     return Hac
 
 
 @log_time
 def ac_ham_ellip(mol, a02, omega, gamma, delta):
     """
-    Computes the AC Stark shift Hamiltonian for a molecule in an oscillating electric
-    field.
+    Computes the AC Stark Hamiltonian per unit light intensity for arbitrary
+    polarisation.
 
-    The function combines the isotropic and anisotropic AC Stark shifts to obtain the
-    total AC Stark Hamiltonian, considering the polarization of the electric field.
+    The function combines the isotropic and anisotropic AC Stark operators. See
+    `unit_ac_aniso_ellip` for the polarisation convention.
 
     Args:
         mol: A molecule object containing the necessary attributes for calculation.
-        a02 (tuple): A two-element tuple containing the isotropic and anisotropic
-            polarizabilities.
-        beta (float, optional): The polarization angle of the electric field.
-            Defaults to 0.
+        a02 (tuple): Two-element tuple (alpha0, alpha2) containing the isotropic
+            and anisotropic polarizabilities.
+        omega (float) - Angle in radians between the light wave vector and the
+            quantisation axis, with the wave vector in the x-z plane.
+        gamma (float) - Amplitude angle in radians. gamma in [0, pi/2]
+            parametrizes the relative amplitudes of the two transverse components.
+        delta (float) - Phase shift in radians of the y component relative to the
+            first transverse component.
 
     Returns:
-        np.ndarray: The AC Stark shift Hamiltonian matrix.
+        np.ndarray: The AC Stark Hamiltonian matrix per unit intensity.
     """
-    Hac = a02[0] * unit_ac_iso(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1]) + a02[
+    Hac = a02[0] * unit_ac_iso(mol.Nmax, mol.Ii[0], mol.Ii[1], Nmin=mol.Nmin) + a02[
         1
-    ] * unit_ac_aniso_ellip(mol.Nmin, mol.Nmax, mol.Ii[0], mol.Ii[1], omega, gamma, delta)
+    ] * unit_ac_aniso_ellip(
+        mol.Nmax, mol.Ii[0], mol.Ii[1], omega, gamma, delta, Nmin=mol.Nmin
+    )
     return Hac

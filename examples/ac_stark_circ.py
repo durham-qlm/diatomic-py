@@ -1,17 +1,18 @@
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants
 
+import diatomic
 from diatomic.systems import SingletSigmaMolecule
 import diatomic.operators as operators
 import diatomic.calculate as calculate
 import diatomic.plotting as plotting
 
-from dan.danplotlib import dscatter
-from dan.danplotlib import tol_colors as tc
-
 plt.close("all")
-plt.style.use(["dan.styles.tweezer_paper"])
+
+# Use logging.DEBUG here to include nested timings such as diagonalisation chunks.
+diatomic.configure_logging(level=logging.INFO)
 
 GAUSS = 1e-4  # T
 MHz = scipy.constants.h * 1e6
@@ -37,7 +38,7 @@ def label_to_indices(labels, N, MF):
 
 # Generate Molecule
 mol = SingletSigmaMolecule.from_preset("Rb87Cs133")
-mol.Nmax = 5
+mol.Nmax = 2
 
 # Tests:
 # Hac = operators.ac_ham(mol, a02=mol.a02[817], beta=0)
@@ -52,7 +53,7 @@ mol.Nmax = 5
 H0 = operators.hyperfine_ham(mol)
 Hz = operators.zeeman_ham(mol)
 
-n_per_seg = [70, 100]
+n_per_seg = [30, 50]
 cum_n_per_seg = np.cumsum(n_per_seg)
 
 inten_1064 = np.linspace(0, 3.5 * kWpercm2, n_per_seg[0])
@@ -87,7 +88,7 @@ Htot = (
 )
 
 # Solve (diagonalise) Hamiltonians
-eigenenergies, eigenstates = calculate.solve_system(Htot)
+eigenenergies, eigenstates = calculate.solve_system(Htot, progress=True, chunk_size=10)
 
 # Apply labels (in some way arbitrary) warn if duplicate
 eigenlabels = calculate.label_states(mol, eigenstates[0], ["N", "MF"])
@@ -159,7 +160,6 @@ for ax, ir, xaxis in zip(
 axs[0].set_ylabel("Transition energy from $N=0, M_F=5$,  $E$ / $h$ (MHz)")
 axs[0].set_xlabel("Laser intensity (kW cm$^{-2}$)")
 
-cset = tc.tol_cset("bright")
 ax = axs[1]
 # Transitions 1
 x = np.array(
@@ -212,7 +212,7 @@ y_err = (
     * 1e-3
 )
 
-dscatter(x, y, yerr=y_err, label=r"$\sigma^-$", ax=ax, color=cset[1], ls="")
+ax.errorbar(x, y, yerr=y_err, label=r"$\sigma^-$", color="C1", ls="", marker="o")
 
 # Transitions2:
 x = np.array(
@@ -267,7 +267,7 @@ y_err = (
     * 1e-3
 )
 
-dscatter(x, y, yerr=y_err, label=r"$\sigma^+$", ax=ax, color=cset[2], ls="")
+ax.errorbar(x, y, yerr=y_err, label=r"$\sigma^+$", color="C2", ls="", marker="o")
 
 ## Transitions3:
 x = np.array(
@@ -316,7 +316,7 @@ y_err = (
 )
 
 
-dscatter(x, y, yerr=y_err, label=r"$\pi$", ax=ax, color=cset[0], ls="")
+ax.errorbar(x, y, yerr=y_err, label=r"$\pi$", color="C0", ls="", marker="o")
 
 ax.legend()
 
@@ -326,4 +326,4 @@ fig.get_layout_engine().set(rect=(left_frac_keep, 0, 1 - left_frac_keep, 1))
 fig.get_layout_engine().set(w_pad=0 / 72, h_pad=0 / 72, hspace=0.0, wspace=0.00)
 
 
-fig.show()
+plt.show()

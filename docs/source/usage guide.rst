@@ -65,6 +65,18 @@ The package comes with a convenience function to perform this step.
 
     eigenenergies, eigenstates = calculate.solve_system(Htot)
 
+For long scans, a progress bar can be shown while the Hamiltonians are diagonalised:
+
+.. code-block:: python
+
+    eigenenergies, eigenstates = calculate.solve_system(
+        Htot, progress=True, chunk_size=10
+    )
+
+This requires the optional :python:`tqdm` dependency, available through
+:python:`diatomic-py[progress]`. The :python:`chunk_size` controls how many
+Hamiltonians are diagonalised between progress updates.
+
 This is almost equivalent to :python:`numpy.linalg.eigh`, however that function sorts eigenstates for all Hamiltonians by increasing eigenenergy.
 The problem with this is, there will be points where eigenenergies of the system cross while varying the varied parameter, but we want these to be continuous.
 In other words, we want the eigenstates :python:`eigenstates[:,:,i]` (where the first free dimension selects the varied parameter value, and the second selects the corresponding basis state component)
@@ -83,6 +95,8 @@ Calculating quantities from the result of the diagonalisation
 
 Now we have performed the computationally expensive diagonalisation, we can derive results from it.
 For example, we may wish to label the states in a more useful way with their appropriate quantum numbers.
+These labels are most meaningful when the state has a dominant component in the labelled sector.
+By default, :python:`label_states` warns when an assigned label sector carries less than 90% of a state's probability weight.
 In the magnetic field range considered here, the only good quantum numbers throughout the range are N and MF.
 They will not, however, uniquely label a state, so we can have an additional index counting up in energy for states with common labels.
 

@@ -130,7 +130,7 @@ for N in range(1, mol.Nmax + 1):
     axdown.plot(INTEN / kWpercm2, T_G[N - 1] / 1e-6, c="green")
     axdown.set_ylim(1e0, 1e3)
     axdown.set_yscale("log")
-    axup.set_title(rf"$|{N-1},{N-1}\rangle \rightarrow |{N},{N}\rangle$")
+    axup.set_title(rf"$|{N - 1},{N - 1}\rangle \rightarrow |{N},{N}\rangle$")
 
 
 axs[0].set_xlim(0, INTEN_MAX)

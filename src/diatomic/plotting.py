@@ -4,7 +4,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
-from scipy.special import sph_harm
+from scipy.special import sph_harm_y
 from diatomic.operators import uncoupled_basis_iter
 
 # from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plots?
@@ -90,8 +90,10 @@ def plot_rotational_3d(ax, mol, eigenvector, plot_res=50):
 
     f_grid = np.zeros((plot_res, plot_res), dtype=np.cdouble)
 
-    for i, (N, MN, M1, M2) in enumerate(uncoupled_basis_iter(mol.Nmax, *mol.Ii)):
-        f_grid += eigenvector[i] * sph_harm(MN, N, phi_grid, theta_grid)
+    for i, (N, MN, M1, M2) in enumerate(
+        uncoupled_basis_iter(mol.Nmax, *mol.Ii, Nmin=mol.Nmin)
+    ):
+        f_grid += eigenvector[i] * sph_harm_y(N, MN, phi_grid, theta_grid)
 
     Yx, Yy, Yz = np.abs(f_grid) ** 2 * xyz  # get final output cartesian coords
     _surface_plot(ax, Yx, Yy, Yz)
@@ -107,8 +109,10 @@ def plot_rotational_2d(ax, mol, eigenvector, plot_res=200, format_axes=True):
     thetas = np.linspace(-np.pi, np.pi, plot_res)
     f_grid = np.zeros((plot_res), dtype=np.cdouble)
 
-    for i, (N, MN, M1, M2) in enumerate(uncoupled_basis_iter(mol.Nmax, *mol.Ii)):
-        f_grid += eigenvector[i] * sph_harm(MN, N, 0, np.abs(thetas))
+    for i, (N, MN, M1, M2) in enumerate(
+        uncoupled_basis_iter(mol.Nmax, *mol.Ii, Nmin=mol.Nmin)
+    ):
+        f_grid += eigenvector[i] * sph_harm_y(N, MN, 0, np.abs(thetas))
 
     probs = np.abs(f_grid) ** 2
     xs = np.sin(thetas) * probs

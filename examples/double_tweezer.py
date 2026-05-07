@@ -259,9 +259,9 @@ ax1.set_ylabel("Transition Frequency (MHz)")
 axd.set_xlabel("817nm Intensity ($kW/cm^2$)")
 
 ax1.set_title(
-    rf"$(\alpha_2(1065nm) = ({popt[0]/to_cgs:.0f} \pm {perr[0]/to_cgs:.0f})"
+    rf"$(\alpha_2(1065nm) = ({popt[0] / to_cgs:.0f} \pm {perr[0] / to_cgs:.0f})"
     " \cdot 4 \pi \epsilon_0 a_0) @ 3.07 kW/cm^2$\n"
-    rf"$\alpha_2(817nm) = ({popt[1]/to_cgs:.0f} \pm {perr[1]/to_cgs:.0f})"
+    rf"$\alpha_2(817nm) = ({popt[1] / to_cgs:.0f} \pm {perr[1] / to_cgs:.0f})"
     " \cdot 4 \pi \epsilon_0 a_0$"
 )
 

@@ -125,7 +125,7 @@ def plot_rotational_2d(ax, mol, eigenvector, plot_res=200, format_axes=True):
         ax.set_axis_off()
 
 
-class Arrow3D(FancyArrowPatch):
+class _Arrow3D(FancyArrowPatch):
     def __init__(self, xs, ys, zs, *args, **kwargs):
         super().__init__((0, 0), (0, 0), *args, **kwargs)
         self._verts3d = xs, ys, zs
@@ -145,23 +145,19 @@ class Arrow3D(FancyArrowPatch):
 
 def plot_polarization_ellipse(omega, gamma, delta, n_points=400, num_arrows=6):
     """
-    Plot the 3D polarization ellipse for
+    Plot the 3D polarization ellipse for::
 
         epsilon = (cos(omega) cos(gamma),
                    exp(i delta) sin(gamma),
-                  -sin(omega) cos(gamma))
+                   -sin(omega) cos(gamma))
 
-    and draw:
-      - the k vector, at angle omega to the z-axis (in the x–z plane)
-      - minimalist x, y, z axes as arrows
-      - a lightly shaded x–y plane (z=0)
-      - the polarization plane (normal to k) in light green
-      - several arrows on the ellipse showing direction as t increases
+    The plot includes the k vector, minimalist coordinate axes, the xy plane,
+    the polarization plane, and arrows showing the direction of increasing time.
 
     Angles in radians.
     """
 
-    # Complex polarization vector ε
+    # Complex polarization vector.
     epsilon = np.array(
         [
             np.cos(omega) * np.cos(gamma),
@@ -171,10 +167,10 @@ def plot_polarization_ellipse(omega, gamma, delta, n_points=400, num_arrows=6):
         dtype=complex,
     )
 
-    # Parameter along the ellipse (plays role of ωt)
+    # Parameter along the ellipse.
     t = np.linspace(0, 1.8 * np.pi, n_points)
 
-    # Electric field tip in time: E(t) = Re[ε e^{-i t}]
+    # Electric field tip in time: E(t) = Re[epsilon e^{-i t}]
     phase_factor = np.exp(-1j * t)
     E = np.real(np.outer(epsilon, phase_factor))  # shape (3, n_points)
     x, y, z = E
@@ -196,12 +192,12 @@ def plot_polarization_ellipse(omega, gamma, delta, n_points=400, num_arrows=6):
     ax.set_ylim(-lim, lim)
     ax.set_zlim(-lim, lim)
 
-    # Lightly shaded x–y plane at z = 0
+    # Lightly shaded xy plane at z = 0.
     xx, yy = np.meshgrid(np.linspace(-lim, lim, 2), np.linspace(-lim, lim, 2))
     zz = np.zeros_like(xx)
     ax.plot_surface(xx, yy, zz, alpha=0.08, color="gray", linewidth=0, shade=False)
 
-    # k vector: angle omega w.r.t. z-axis in the x–z plane
+    # k vector: angle omega with respect to the z-axis in the xz plane.
     k_hat = np.array([np.sin(omega), 0.0, np.cos(omega)])
     k_hat /= np.linalg.norm(k_hat)
     k_len = lim * 0.9
@@ -260,7 +256,7 @@ def plot_polarization_ellipse(omega, gamma, delta, n_points=400, num_arrows=6):
 
         p_arrow = p0 + arrow_len * tangent
 
-        arrow = Arrow3D(
+        arrow = _Arrow3D(
             [p0[0], p_arrow[0]],
             [p0[1], p_arrow[1]],
             [p0[2], p_arrow[2]],

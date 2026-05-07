@@ -16,9 +16,9 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "diatomic-py"
-copyright = "2023, Tom Hepworth"
+copyright = "2026, Tom Hepworth"
 author = "Tom Hepworth"
-release = "2.0.0"
+release = "2.1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

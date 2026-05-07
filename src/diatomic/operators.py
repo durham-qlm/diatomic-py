@@ -1045,8 +1045,8 @@ def unit_ac_aniso_ellip(Nmax, I1, I2, omega, gamma, delta, *, Nmin=0):
     Calculate the unit anisotropic AC Stark operator for arbitrary polarisation.
 
     The light wave vector lies in the x-z plane,
-    k = (sin(omega), 0, cos(omega)), where z is the quantisation axis. The
-    transverse complex Jones vector is
+    ``k = (sin(omega), 0, cos(omega))``, where z is the quantisation axis. The
+    transverse complex Jones vector is::
 
         epsilon = (
             cos(omega) * cos(gamma),
@@ -1058,16 +1058,17 @@ def unit_ac_aniso_ellip(Nmax, I1, I2, omega, gamma, delta, *, Nmin=0):
     for this implementation are here:
     https://gist.github.com/tomhepz/bbd3975aa8893d325d3facb76b902655
 
-    Some useful equivalences with the linear-polarisation version are:
-    (beta = 0)     <==>  (omega=pi/2, gamma=0,    delta=0)
-    (beta = pi/2)  <==>  (omega=pi/2, gamma=pi/2, delta=0)
+    Some useful equivalences with the linear-polarisation version are::
 
-    For a beam propagating along +z, the circular-polarisation conventions are:
-    sigma+ light (omega=0, gamma=pi/4, delta=pi/2)  => epsilon = (1, +i, 0) / sqrt(2)
-    sigma- light (omega=0, gamma=pi/4, delta=-pi/2) => epsilon = (1, -i, 0) / sqrt(2)
+        beta = 0     <==>  omega = pi/2, gamma = 0,    delta = 0
+        beta = pi/2  <==>  omega = pi/2, gamma = pi/2, delta = 0
+
+    For a beam propagating along +z, the circular-polarisation conventions are::
+
+        sigma+ light: omega = 0, gamma = pi/4, delta = pi/2
+        sigma- light: omega = 0, gamma = pi/4, delta = -pi/2
 
     Args:
-
         Nmax (int) - maximum rotational quantum number to calculate
         I1,I2 (float) - Nuclear spin of nucleus 1,2
         omega (float) - Angle in radians between the light wave vector and the

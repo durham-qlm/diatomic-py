@@ -18,13 +18,19 @@ Installation from source
     git clone https://github.com/durham-qlm/diatomic-py.git
     cd diatomic-py
 
-    # Installs essentials + matplotlib
+    # Installs essentials only
+    python -m pip install .
+
+    # Installs essentials + plotting support
     python -m pip install ".[plotting]"
 
-    # OR if you also want to run test suite:
-    python -m pip install ".[test,plotting]"
-    pytest
+    # Installs plotting support and optional progress bars
+    python -m pip install ".[plotting,progress]"
 
-    # OR if you want to develop code for the package
-    python -m pip install -e ".[dev,plotting]"
-    pre-commit install
+Development dependencies are managed with dependency groups. With uv:
+
+.. code-block:: shell
+
+    uv sync --group dev
+    uv run pre-commit install
+    uv run pytest

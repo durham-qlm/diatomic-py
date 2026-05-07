@@ -41,6 +41,7 @@ test = [
   "pytest",
 ]
 docs = [
+  "matplotlib>=3.10.9",
   "sphinx",
   "sphinx-book-theme",
 ]

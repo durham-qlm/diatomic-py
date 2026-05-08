@@ -9,10 +9,10 @@ import diatomic.calculate as calculate
 GAUSS = 1e-4  # T
 KW_PER_CM2 = 1e7
 
-INTENSITY_KW_PER_CM2 = 0.001
+INTENSITY_KW_PER_CM2 = 4.0
 B_FIELDS_GAUSS = [0.001, 181.6]
 BETAS = [0, np.sqrt(1 / 3)]
-STATE_INDEX = 148
+STATE_INDEX = 149
 LABELS = ["N", "MF"]
 
 
@@ -39,7 +39,7 @@ def label_case(mol, h0, hz, beta, b_gauss):
             LABELS,
             index_repeats=True,
             warn_mixed=True,
-            min_weight=0.9,
+            min_weight=0.99,
         )
 
     return eiglabels, caught_warnings
@@ -47,7 +47,7 @@ def label_case(mol, h0, hz, beta, b_gauss):
 
 def main():
     mol = SingletSigmaMolecule.from_preset("Rb87Cs133")
-    mol.Nmax = 2
+    mol.Nmax = 3
 
     h0 = operators.hyperfine_ham(mol)
     hz = operators.zeeman_ham(mol)

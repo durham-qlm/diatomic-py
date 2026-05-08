@@ -93,7 +93,7 @@ def plot_rotational_3d(ax, mol, eigenvector, plot_res=50):
     for i, (N, MN, M1, M2) in enumerate(
         uncoupled_basis_iter(mol.Nmax, *mol.Ii, Nmin=mol.Nmin)
     ):
-        f_grid += eigenvector[i] * sph_harm_y(N, MN, phi_grid, theta_grid)
+        f_grid += eigenvector[i] * sph_harm_y(N, MN, theta_grid, phi_grid)
 
     Yx, Yy, Yz = np.abs(f_grid) ** 2 * xyz  # get final output cartesian coords
     _surface_plot(ax, Yx, Yy, Yz)
@@ -112,7 +112,7 @@ def plot_rotational_2d(ax, mol, eigenvector, plot_res=200, format_axes=True):
     for i, (N, MN, M1, M2) in enumerate(
         uncoupled_basis_iter(mol.Nmax, *mol.Ii, Nmin=mol.Nmin)
     ):
-        f_grid += eigenvector[i] * sph_harm_y(N, MN, 0, np.abs(thetas))
+        f_grid += eigenvector[i] * sph_harm_y(N, MN, np.abs(thetas), 0)
 
     probs = np.abs(f_grid) ** 2
     xs = np.sin(thetas) * probs

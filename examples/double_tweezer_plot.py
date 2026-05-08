@@ -111,5 +111,4 @@ for i in range(32, 128):
 ax.set_ylabel("$E/h$ (MHz)")
 ax.set_xlabel("817nm Intensity ($kW/cm^2$)")
 
-fig.show()
-input("Enter to close")
+plt.show()

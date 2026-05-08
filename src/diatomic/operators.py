@@ -568,7 +568,7 @@ def wigner_D(l, m, alpha, beta, gamma):  # noqa: E741
         D (float) : Value of the wigner-D matrix
     """
     prefactor = np.sqrt((4 * np.pi) / (2 * l + 1))
-    function = np.conj(sph_harm_y(l, m, alpha, beta))
+    function = np.conj(sph_harm_y(l, m, beta, alpha))
     return prefactor * function
 
 

@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reworked `calculate.sort_smooth` to use one-to-one assignment, avoiding duplicated state trajectories when overlaps are tied or nearly degenerate.
 - Updated `sort_by_labels`, `magnetic_moment`, and `electric_moment` to handle both single-Hamiltonian and scan-shaped outputs.
 - Updated nested timing logs so top-level timed calls log at `INFO`, nested calls log at `DEBUG`, and failures are logged before re-raising.
-- Replaced deprecated `scipy.special.sph_harm` usage with `scipy.special.sph_harm_y`.
+- Replaced deprecated `scipy.special.sph_harm` usage with `scipy.special.sph_harm_y`. Note that they sneakily changed the internal mathematical meaning of theta and phi while keeping the function signature the same...
 - Updated examples to use chunked/progress diagonalisation where useful and to avoid blocking `input()` calls.
 - Updated the PyPI publish action to `pypa/gh-action-pypi-publish@v1.13.0`.
 

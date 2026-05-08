@@ -230,3 +230,10 @@ def test_old_operator_signatures_match_keyword_nmin_zero():
         tensor_nuclear(1, old_vecs[1], old_vecs[2], I1, I2, Nmax),
         tensor_nuclear(1, old_vecs[1], old_vecs[2], I1, I2, Nmax, Nmin=0),
     )
+
+
+def test_unit_ac_aniso_depends_on_beta():
+    aligned = unit_ac_aniso(1, 0, 0, 0)
+    tilted = unit_ac_aniso(1, 0, 0, np.pi / 4)
+
+    assert not np.allclose(tilted, aligned)

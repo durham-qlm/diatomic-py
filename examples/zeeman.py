@@ -35,7 +35,7 @@ Htot = H0 + Hz * B[:, None, None]
 eigenenergies, eigenstates = calculate.solve_system(Htot, progress=True, chunk_size=10)
 
 # Apply labels (in some way arbitrary) warn if duplicate
-eigenlabels = calculate.label_states(mol, eigenstates[0], ["N", "MF"])
+eigenlabels = calculate.label_states(mol, eigenstates[-1], ["N", "MF"])
 
 magnetic_moments = calculate.magnetic_moment(mol, eigenstates)
 

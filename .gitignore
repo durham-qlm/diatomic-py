@@ -37,6 +37,9 @@ share/python-wheels/
 *.egg
 MANIFEST
 .vscode/
+.codex
+.agents
+.ruff_cache
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

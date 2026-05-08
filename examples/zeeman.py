@@ -32,7 +32,7 @@ B = np.linspace(B_MIN_GAUSS, B_MAX_GAUSS, 300) * GAUSS
 Htot = H0 + Hz * B[:, None, None]
 
 # Solve (diagonalise) Hamiltonians
-eigenenergies, eigenstates = calculate.solve_system(Htot)
+eigenenergies, eigenstates = calculate.solve_system(Htot, progress=True, chunk_size=10)
 
 # Apply labels (in some way arbitrary) warn if duplicate
 eigenlabels = calculate.label_states(mol, eigenstates[-1], ["N", "MF"])
@@ -84,7 +84,7 @@ for c, rgbi, transition_elements in zip(cs, rgbis, h):
 axdl.plot(B / GAUSS, eigenenergies[:, groundstate] / MHz, c="red", lw=1, alpha=0.5)
 
 axur.set_ylim(6, 1)
-axur.set_ylabel("Magnetic Moment ($\mu_N$)")
+axur.set_ylabel(r"Magnetic Moment ($\mu_N$)")
 axdr.set_ylabel(r"Transition Dipole Moment ($d_{\mathrm{mol}}$)")
 
 axdl.set_xlim(0, B_MAX_GAUSS)

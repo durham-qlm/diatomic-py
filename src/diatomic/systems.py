@@ -19,6 +19,7 @@ class SingletSigmaMolecule:
     def __init__(
         self,
         Ii: tuple[int | HalfInt, int | HalfInt] = (0, 0),
+        Nmin: int = 0,
         Nmax: int = 1,
         Brot: float = 1e9 * h,
         Drot: float = 0.0,
@@ -34,7 +35,8 @@ class SingletSigmaMolecule:
         # Nuclear Spin magnitudes
         self.Ii = Ii
 
-        # Maximum rotational basis components considered
+        # rotational basis components considered
+        self.Nmin = Nmin
         self.Nmax = Nmax
 
         # Rotational Constants
@@ -120,6 +122,46 @@ class SingletSigmaMolecule:
                     1825 * 4 * pi * eps0 * bohr**3,
                     1981 * 4 * pi * eps0 * bohr**3,
                 ),
+                1013: (
+                    2000 * 4 * pi * eps0 * bohr**3,
+                    1500 * 4 * pi * eps0 * bohr**3,
+                ),
+                817: (
+                    443 * 4 * pi * eps0 * bohr**3,
+                    -2816 * 4 * pi * eps0 * bohr**3,
+                ),
+            },
+        },
+        "Rb87Cs133-RR": {
+            # Most recent Rb87Cs133 Constants are given in the supplementary
+            # of Gregory et al., Nat. Phys. 17, 1149-1153 (2021)
+            # https://www.nature.com/articles/s41567-021-01328-7
+            # Polarisabilities are for 1064 nm reported
+            # in Blackmore et al., PRA 102, 053316 (2020)
+            # https://journals.aps.org/pra/abstract/10.1103/PhysRevA.102.053316
+            "Ii": (0, 0),
+            "d0": 1.225 * DebyeSI,
+            "Brot": 490.173994326310e6 * h,
+            "Drot": 207.3 * h,
+            "Qi": (-809.29e3 * h, 59.98e3 * h),
+            "Ci": (29.4 * h, 196.8 * h),
+            "C3": 192.4 * h,
+            "C4": 19.0189557e3 * h,
+            "MuN": 0.0062 * muN,
+            "Mui": (1.8295 * muN, 0.7331 * muN),
+            "a02": {
+                1064: (
+                    2020 * 4 * pi * eps0 * bohr**3,
+                    1997 * 4 * pi * eps0 * bohr**3,
+                ),
+                1065: (
+                    1825 * 4 * pi * eps0 * bohr**3,
+                    1981 * 4 * pi * eps0 * bohr**3,
+                ),
+                1013: (
+                    2000 * 4 * pi * eps0 * bohr**3,
+                    1500 * 4 * pi * eps0 * bohr**3,
+                ),
                 817: (
                     443 * 4 * pi * eps0 * bohr**3,
                     -2816 * 4 * pi * eps0 * bohr**3,
@@ -153,7 +195,7 @@ class SingletSigmaMolecule:
             # https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.109.230403
             # All other parameters are from Aldegunde et al., PRA 96, 042506 (2017)
             # https://journals.aps.org/pra/abstract/10.1103/PhysRevA.96.042506
-            "Ii": (HalfInt(of=4), HalfInt(of=3)),
+            "Ii": (HalfInt(of=8), HalfInt(of=3)),
             "d0": 0.566 * DebyeSI,
             "Brot": 1113.950e6 * h,
             "Drot": 0 * h,
@@ -202,7 +244,7 @@ class SingletSigmaMolecule:
             # https://journals.aps.org/pra/abstract/10.1103/PhysRevA.96.042506
             "Ii": (HalfInt(of=3), HalfInt(of=7)),
             "d0": 4.53 * DebyeSI,  # Theory value
-            "Brot": 0.962e9 * h,
+            "Brot": 1.735616e9 * h,
             "Drot": 0 * h,
             "Qi": (-0.097e6 * h, 0.150e6 * h),
             "Ci": (14.2 * h, 854.5 * h),

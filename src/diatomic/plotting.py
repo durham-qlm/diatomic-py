@@ -1,9 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+from matplotlib.patches import FancyArrowPatch
+from mpl_toolkits.mplot3d import proj3d
 
-from scipy.special import sph_harm
+from scipy.special import sph_harm_y
 from diatomic.operators import uncoupled_basis_iter
+
+# from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plots?
 
 
 def _make_segments(x, y):
@@ -86,8 +90,10 @@ def plot_rotational_3d(ax, mol, eigenvector, plot_res=50):
 
     f_grid = np.zeros((plot_res, plot_res), dtype=np.cdouble)
 
-    for i, (N, MN, M1, M2) in enumerate(uncoupled_basis_iter(mol.Nmax, *mol.Ii)):
-        f_grid += eigenvector[i] * sph_harm(MN, N, phi_grid, theta_grid)
+    for i, (N, MN, M1, M2) in enumerate(
+        uncoupled_basis_iter(mol.Nmax, *mol.Ii, Nmin=mol.Nmin)
+    ):
+        f_grid += eigenvector[i] * sph_harm_y(N, MN, theta_grid, phi_grid)
 
     Yx, Yy, Yz = np.abs(f_grid) ** 2 * xyz  # get final output cartesian coords
     _surface_plot(ax, Yx, Yy, Yz)
@@ -103,8 +109,10 @@ def plot_rotational_2d(ax, mol, eigenvector, plot_res=200, format_axes=True):
     thetas = np.linspace(-np.pi, np.pi, plot_res)
     f_grid = np.zeros((plot_res), dtype=np.cdouble)
 
-    for i, (N, MN, M1, M2) in enumerate(uncoupled_basis_iter(mol.Nmax, *mol.Ii)):
-        f_grid += eigenvector[i] * sph_harm(MN, N, 0, np.abs(thetas))
+    for i, (N, MN, M1, M2) in enumerate(
+        uncoupled_basis_iter(mol.Nmax, *mol.Ii, Nmin=mol.Nmin)
+    ):
+        f_grid += eigenvector[i] * sph_harm_y(N, MN, np.abs(thetas), 0)
 
     probs = np.abs(f_grid) ** 2
     xs = np.sin(thetas) * probs
@@ -115,3 +123,174 @@ def plot_rotational_2d(ax, mol, eigenvector, plot_res=200, format_axes=True):
         ax.plot([-0.15, 0.15], [0, 0], c="k", alpha=0.2)
         ax.plot([0, 0], [-0.15, 0.15], c="k", alpha=0.2)
         ax.set_axis_off()
+
+
+class _Arrow3D(FancyArrowPatch):
+    def __init__(self, xs, ys, zs, *args, **kwargs):
+        super().__init__((0, 0), (0, 0), *args, **kwargs)
+        self._verts3d = xs, ys, zs
+
+    def draw(self, renderer):
+        xs3d, ys3d, zs3d = self._verts3d
+        xs2d, ys2d, zs2d = proj3d.proj_transform(xs3d, ys3d, zs3d, self.axes.get_proj())
+        self.set_positions((xs2d[0], ys2d[0]), (xs2d[1], ys2d[1]))
+        super().draw(renderer)
+
+    def do_3d_projection(self, renderer=None):
+        xs3d, ys3d, zs3d = self._verts3d
+        xs2d, ys2d, zs2d = proj3d.proj_transform(xs3d, ys3d, zs3d, self.axes.get_proj())
+        self.set_positions((xs2d[0], ys2d[0]), (xs2d[1], ys2d[1]))
+        return np.min(zs2d)
+
+
+def plot_polarization_ellipse(omega, gamma, delta, n_points=400, num_arrows=6):
+    """
+    Plot the 3D polarization ellipse for::
+
+        epsilon = (cos(omega) cos(gamma),
+                   exp(i delta) sin(gamma),
+                   -sin(omega) cos(gamma))
+
+    The plot includes the k vector, minimalist coordinate axes, the xy plane,
+    the polarization plane, and arrows showing the direction of increasing time.
+
+    Angles in radians.
+    """
+
+    # Complex polarization vector.
+    epsilon = np.array(
+        [
+            np.cos(omega) * np.cos(gamma),
+            np.exp(1j * delta) * np.sin(gamma),
+            -np.sin(omega) * np.cos(gamma),
+        ],
+        dtype=complex,
+    )
+
+    # Parameter along the ellipse.
+    t = np.linspace(0, 1.8 * np.pi, n_points)
+
+    # Electric field tip in time: E(t) = Re[epsilon e^{-i t}]
+    phase_factor = np.exp(-1j * t)
+    E = np.real(np.outer(epsilon, phase_factor))  # shape (3, n_points)
+    x, y, z = E
+
+    # Set up figure
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    ax.set_proj_type("ortho")  # orthographic projection
+    ax.set_box_aspect([1, 1, 1])  # equal scaling in x, y, z
+
+    # Plot the polarization ellipse
+    ax.plot(x, y, z, linewidth=2, color="C0")
+
+    # Symmetric range
+    max_extent = max(np.max(np.abs(x)), np.max(np.abs(y)), np.max(np.abs(z)), 1e-6)
+    lim = max_extent * 1.4
+
+    ax.set_xlim(-lim, lim)
+    ax.set_ylim(-lim, lim)
+    ax.set_zlim(-lim, lim)
+
+    # Lightly shaded xy plane at z = 0.
+    xx, yy = np.meshgrid(np.linspace(-lim, lim, 2), np.linspace(-lim, lim, 2))
+    zz = np.zeros_like(xx)
+    ax.plot_surface(xx, yy, zz, alpha=0.08, color="gray", linewidth=0, shade=False)
+
+    # k vector: angle omega with respect to the z-axis in the xz plane.
+    k_hat = np.array([np.sin(omega), 0.0, np.cos(omega)])
+    k_hat /= np.linalg.norm(k_hat)
+    k_len = lim * 0.9
+    k_vec = k_len * k_hat
+
+    ax.quiver(
+        0,
+        0,
+        0,
+        k_vec[0],
+        k_vec[1],
+        k_vec[2],
+        arrow_length_ratio=0.1,
+        linewidth=2,
+        color="C3",
+    )
+    ax.text(
+        k_vec[0] * 1.05, k_vec[1] * 1.05, k_vec[2] * 1.05, r"$\mathbf{k}$", fontsize=12
+    )
+
+    # ---- Polarization plane (normal to k) in light green ----
+    # Build an orthonormal basis {u, v, k_hat}
+    if abs(k_hat[2]) < 0.9:
+        tmp = np.array([0.0, 0.0, 1.0])
+    else:
+        tmp = np.array([0.0, 1.0, 0.0])
+
+    u = np.cross(k_hat, tmp)
+    u /= np.linalg.norm(u)
+    v = np.cross(k_hat, u)
+
+    s_vals = np.linspace(-lim, lim, 2)
+    t_vals = np.linspace(-lim, lim, 2)
+    S, T = np.meshgrid(s_vals, t_vals)
+
+    Xp = S * u[0] + T * v[0]
+    Yp = S * u[1] + T * v[1]
+    Zp = S * u[2] + T * v[2]
+
+    ax.plot_surface(
+        Xp, Yp, Zp, alpha=0.12, color="lightgreen", linewidth=0, shade=False
+    )
+
+    # ---- Multiple arrows decorating the ellipse (direction of increasing t) ----
+    step = n_points // num_arrows
+    arrow_len = 0.2 * lim  # a bit shorter so multiple arrows don't clutter
+
+    for i in range(0, n_points - 1 - step, step):
+        p0 = np.array([x[i], y[i], z[i]])
+        p1 = np.array([x[i + 1], y[i + 1], z[i + 1]])  # slightly further along
+
+        tangent = p1 - p0
+        if np.linalg.norm(tangent) == 0:
+            continue
+        tangent /= np.linalg.norm(tangent)
+
+        p_arrow = p0 + arrow_len * tangent
+
+        arrow = _Arrow3D(
+            [p0[0], p_arrow[0]],
+            [p0[1], p_arrow[1]],
+            [p0[2], p_arrow[2]],
+            mutation_scale=12,
+            lw=2,
+            arrowstyle="-|>",
+            color="C1",
+        )
+        ax.add_artist(arrow)
+
+    # Minimalist coordinate axes as arrows
+    axis_len = lim * 0.8
+
+    ax.quiver(
+        0, 0, 0, axis_len, 0, 0, arrow_length_ratio=0.08, linewidth=1, color="black"
+    )
+    ax.quiver(
+        0, 0, 0, 0, axis_len, 0, arrow_length_ratio=0.08, linewidth=1, color="black"
+    )
+    ax.quiver(
+        0, 0, 0, 0, 0, axis_len, arrow_length_ratio=0.08, linewidth=1, color="black"
+    )
+
+    ax.text(axis_len * 1.05, 0, 0, "x", fontsize=10)
+    ax.text(0, axis_len * 1.05, 0, "y", fontsize=10)
+    ax.text(0, 0, axis_len * 1.05, "z", fontsize=10)
+
+    # Clean up: no grid, no ticks, no box
+    ax.grid(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_zticks([])
+    ax.set_axis_off()
+
+    ax.set_title("3D Polarization Ellipse with k-vector", pad=20)
+    plt.tight_layout()
+    plt.show()

@@ -1,3 +1,6 @@
+import logging
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants
@@ -16,8 +19,6 @@ eps0 = scipy.constants.epsilon_0
 
 GAUSS = 1e-4  # T
 MHz = scipy.constants.h * 1e6
-muN = scipy.constants.physical_constants["nuclear magneton"][0]
-H_BAR = scipy.constants.hbar
 kWpercm2 = 1e7
 
 
@@ -28,7 +29,8 @@ def label_to_indices(labels, N, MF):
 
 
 # Set logging
-diatomic.configure_logging()
+# Use logging.DEBUG here to include nested timings such as diagonalisation chunks.
+diatomic.configure_logging(level=logging.INFO)
 
 # Generate Molecule
 mol = SingletSigmaMolecule.from_preset("Rb87Cs133")
@@ -49,7 +51,7 @@ mol.Nmax = 2
     TransCent3,
     TransCent3Err,
 ) = np.genfromtxt(
-    "./examples/1065_pi_transitions.csv",
+    Path(__file__).with_name("1065_pi_transitions.csv"),
     delimiter=",",
     skip_header=1,
     dtype=None,
@@ -81,7 +83,7 @@ def residuals(params):
     # Sigma data
     Htot = Hseed + (Int[:, None, None] * kWpercm2 * a2_1065) * Hac_unit_aniso
 
-    eigenergies, eigstates = calculate.solve_system(Htot)
+    eigenergies, eigstates = calculate.solve_system(Htot, chunk_size=10)
     eiglabels = calculate.label_states(mol, eigstates[0, :, 0:128], ["N", "MF"])
 
     start_index = label_to_indices(eiglabels, 0, 5)[0]
@@ -98,7 +100,13 @@ p0 = [mol.a02[1065][1]]  # Initial guess for the parameters
 
 arg_list = ()
 
-popt, pcov, _, _, ier = leastsq(residuals, p0, args=arg_list, full_output=True)
+
+@diatomic.log_time
+def fit_alpha2(initial_params):
+    return leastsq(residuals, initial_params, args=arg_list, full_output=True)
+
+
+popt, pcov, _, _, ier = fit_alpha2(p0)
 
 perr = np.sqrt(np.diag(pcov))
 
@@ -121,7 +129,7 @@ INTEN1065 = np.linspace(INTEN_MIN, INTEN_MAX, INTEN_STEPS) * kWpercm2
 Htot = H0 + Hz * B + Hac1065 * INTEN1065[:, None, None]
 
 # Solve (diagonalise) Hamiltonians
-eigenergies, eigstates = calculate.solve_system(Htot)
+eigenergies, eigstates = calculate.solve_system(Htot, progress=True, chunk_size=10)
 
 eiglabels = calculate.label_states(mol, eigstates[-1], ["N", "MF"], index_repeats=True)
 
@@ -194,11 +202,10 @@ ax1.set_ylabel("Transition Frequency (MHz)")
 axd.set_xlabel("1065nm Intensity ($kW/cm^2$)")
 
 ax1.set_title(
-    rf"$\alpha_2(1065nm) = ({popt[0]/to_cgs:.0f} \pm {perr[0]/to_cgs:.0f})"
-    " \cdot 4 \pi \epsilon_0 a_0$"
+    rf"$\alpha_2(1065nm) = ({popt[0] / to_cgs:.0f} \pm {perr[0] / to_cgs:.0f})"
+    r" \cdot 4 \pi \epsilon_0 a_0$"
 )
 
 fig.savefig("alpha2_regression.jpg", dpi=300)
 
-fig.show()
-input("Enter to close")
+plt.show()

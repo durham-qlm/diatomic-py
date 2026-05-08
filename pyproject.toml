@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "diatomic-py"
-version = "2.0.3"
+version = "2.1.0"
 description = "A package for calculating rotational and hyperfine structure of singlet diatomic molecules."
 readme = "README.rst"
 license = {file = "LICENSE"}
@@ -18,31 +18,40 @@ classifiers = [
   "License :: OSI Approved :: BSD License",
   "Operating System :: OS Independent"
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-  "numpy",
-  "sympy",
-  "scipy<=1.16.2"
+    "numpy>=2.3.5",
+    "scipy>=1.15.3",
+    "sympy>=1.14.0",
 ]
 
 [project.optional-dependencies]
-test = [
-  "pytest"
-]
 plotting = [
-  "matplotlib"
+  "matplotlib>=3.10.9",
 ]
-docs = [
-  "sphinx",
-  "sphinx-book-theme"
-]
-dev = [
-  "diatomic-py[test]",
-  "diatomic-py[docs]",
-  "black",
-  "pre-commit",
-  "ruff",
+progress = [
+  "tqdm>=4.67.3"
 ]
 
 [tool.ruff]
 src = ["src"]
+
+[dependency-groups]
+test = [
+  "pytest",
+]
+docs = [
+  "matplotlib>=3.10.9",
+  "sphinx",
+  "sphinx-book-theme",
+]
+dev = [
+  {include-group = "test"},
+  {include-group = "docs"},
+  "black>=26.3.1",
+  "matplotlib>=3.10.9",
+  "pre-commit",
+  "pyqt6>=6.11.0",
+  "ruff>=0.15.12",
+  "tqdm>=4.67.3",
+]
